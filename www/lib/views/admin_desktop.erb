@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Админка</title>
+    <!-- <link rel="stylesheet" type="text/css" href="/themes/default/easyui.css"> -->
+    <link rel="stylesheet" id="thlink" type="text/css" href="/themes/<%= defined?(@theme)&&!@theme.to_s.empty? ? @theme : 'default' %>/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/themes/color.css">
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+    <script type="text/javascript" src="/jquery.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.min.js"></script>
+    <!-- <script type="text/javascript" src="/jquery.easyui.mobile.js"></script> -->
+    <script type="text/javascript" src="/locale/easyui-lang-ru.js"></script>
+    <script type="text/javascript" src="/datagrid-scrollview.js"></script>
+    <script type="text/javascript" src="/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="/moment.js"></script>
+    <script src="/tinymce/tinymce.min.js"></script>
+    <script src="/clipboard.min.js"></script>
+    <style type="text/css">
+    .text-muted {
+        color: #b3b3b3
+    }
+    
+    .text-primary {
+        color: #337ab7
+    }
+    
+    a.text-primary:hover,
+    a.text-primary:focus {
+        color: #286090
+    }
+    
+    .text-success {
+        color: #1d9d74
+    }
+    
+    a.text-success:hover,
+    a.text-success:focus {
+        color: #157254
+    }
+    
+    .text-info {
+        color: #007dbc
+    }
+    
+    a.text-info:hover,
+    a.text-info:focus {
+        color: #005b89
+    }
+    
+    .text-warning {
+        color: #8a6d3b
+    }
+    
+    a.text-warning:hover,
+    a.text-warning:focus {
+        color: #66512c
+    }
+    
+    .text-danger {
+        color: #d9534f
+    }
+    
+    a.text-danger:hover,
+    a.text-danger:focus {
+        color: #c9302c
+    }
+    </style>
+</head>
+
+<body class="easyui-layout">
+    <script type="text/javascript">
+    $(function() {
+        moment.locale('ru');
+    });
+
+    function format_datetime(date) {
+        console.log(date);
+        return moment(date).format("ddd, MMM Do YYYY, H:mm:ss a");
+    }
+
+    function parse_datetime(date) {
+        console.log(date);
+        return moment(date, ["ddd, MMM Do YYYY, H:mm:ss a", "X", moment.ISO_8601]).toDate();
+    }
+
+    function format_duration(date) {
+        // console.log(date);
+        return moment.utc(date).format("H:mm:ss");
+    }
+
+    function parse_duration(date) {
+        console.log(date);
+        return moment.utc(date, ["H:mm:ss", "X"]).toDate();
+    }
+    $.fn.datetimebox.defaults.parser = parse_datetime
+    $.fn.datetimebox.defaults.formatter = format_datetime
+        // $.fn.timespinner.defaults.parser = parse_duration
+        // $.fn.timespinner.defaults.formatter = format_duration
+    </script>
+    <div data-options="region:'north',split:false" style="height:30px;">
+        <a href="/" class="easyui-linkbutton" plain="true" outline="true">Главная</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton " plain="true" outline="true" onclick="$('#dlg_create').dialog('open').dialog('center')">Создать уровень</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton " plain="true" outline="true" onclick="$('#w_files').window('open')">Файлы</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton " plain="true" outline="true" onclick="close_game()">Закрыть</a>
+        <a href="/stat/<%=game_id%>" class="easyui-linkbutton" plain="true" target="_blank" outline="true">Стата</a>
+    </div>
+    <!-- <div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div> -->
+    <!-- <div data-options="region:'east',title:'Уровни',split:true" style="width:100px;"></div> -->
+    <div data-options="region:'west',title:'Уровни',split:true,collapsible:true" style="width:300px;">
+        <div id="mm_l_list" class="easyui-menu" data-options="fit:true,inline:true,onClick:mm_l_list_click"></div>
+    </div>
+    <div data-options="region: 'center'" id="center_panel"></div>
+</body>
+<div id="dlg_create" class="easyui-dialog" style="padding:20px 6px;width:80%;" data-options="inline:true,modal:true,closed:true,title:'Создать уровень'">
+    <div style="margin-bottom:10px">
+        <input id="create_level_title" class="easyui-textbox" prompt="Название" style="width:100%;height:30px">
+    </div>
+    <div class="dialog-button">
+        <a id="btn_level_create" href="javascript:void(0)" class="easyui-linkbutton" style="width:100%;height:35px">Создать</a>
+    </div>
+</div>
+<div id="w_files" class="easyui-window" title="Файлы" data-options="iconCls:'icon-save',minimizable:false,closed:true,onOpen:clip" style="width:500px;height:200px;">
+    <div class="easyui-tabs" style="width:;height:100%;">
+        <div title="Список" style="padding:10px" data-options="href:'/admin/files/<%=game_id%>',cache:false">
+        </div>
+        <div title="Загрузить" style="padding:10px">
+            <form id="upload_file_form" method="post" enctype="multipart/form-data" action="/admin/upload/<%=game_id%>">
+                <input class="easyui-filebox" name="files[]" data-options="multiple:true" style="width:100%">
+                <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submit_files_Form()" style="width:80px">Отправить</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+</html>
+<script type="text/javascript">
+function clip() {
+
+    var btns = document.querySelectorAll('#file_list > * >a.l-btn')
+    console.log(btns);
+    var clipboard = new Clipboard(btns, {
+        target: function(trigger) {
+
+            return trigger.nextElementSibling;
+        }
+    });
+    clipboard.on('success', function(e) {
+        console.log(e);
+    });
+    clipboard.on('error', function(e) {
+        console.log(e);
+    });
+}
+
+function close_game() {
+    $.messager.confirm({
+        title: 'Закрыть игру?',
+        ok: 'да',
+        cancel: 'нет',
+
+        msg: 'Закрытие игры опубликует статистику и сделает доступным сценарий, также любые правки в статистике станут невозможны.<br><br><br> Закрываем?',
+        fn: function(r) {
+            if (r) {
+
+                $.getJSON("/admin/game/close/<%= game_id%>", function(resp) {
+                    $.messager.show({
+                        // title:'My Title',
+                        msg: resp.msg,
+                        showType: 'slide',
+                        style: {
+                            right: '',
+                            top: document.body.scrollTop + document.documentElement.scrollTop,
+                            bottom: ''
+                        }
+                    });
+                    if (resp.state) {
+                        window.location = "/arhive/game/list/<%= game_id%>"
+                    }
+                });
+            }
+        }
+    });
+}
+
+function submit_files_Form() {
+    $('#upload_file_form').form('submit');
+}
+
+function load_level_list() {
+    ll = $('#mm_l_list')
+    l = $('#mm_l_list .menu-item')
+    for (var i = 0; i < l.length; i++) {
+        ll.menu('removeItem', l[i])
+    }
+    $.getJSON("/admin/game/level_list/<%= game_id%>", function(data) {
+
+        for (var i = 0, len = data.list.length; i < len; i++) {
+            var link = ""
+            if (data.list[i].id == "game_anounce") {
+                link = data.list[i].link
+            } else {
+                link = "/admin2/game/level_editor/" + data.list[i].id
+            }
+            ll.menu('appendItem', {
+                text: data.list[i].title,
+                id: "lmi_" + data.list[i].id,
+                // iconCls: 'icon-ok',
+                link: link,
+            });
+        }
+
+    });
+}
+
+function mm_l_list_click(item) {
+    tinymce.remove();
+
+    current_level = item.id.split('_')[1]
+    console.log(item)
+    $("#mm_l_list > .menu-item .icon-ok").each(function(index) {
+        // console.log($(this).parent());
+        $('#mm_l_list').menu('setIcon', {
+            target: $(this).parent()[0],
+            iconCls: ''
+        });
+    });
+    $('#mm_l_list').menu('setIcon', {
+        target: item.target,
+        iconCls: 'icon-ok'
+    });
+    link = "/admin2/game/level_editor/" + current_level
+    $('#center_panel').panel({
+        href: item.link,
+        // onLoad:function(){
+        // alert('loaded successfully');
+        // }
+    });
+
+}
+$(function() {
+    $("#btn_level_create").bind('click', function() {
+        $.getJSON("/admin/game/create_level", {
+                title: $('#create_level_title').textbox('getValue'),
+                game_id: <%= game_id%>
+            },
+            function(resp) {
+                $.messager.show({
+                    // title:'My Title',
+                    msg: resp.message,
+                    showType: 'slide',
+                    style: {
+                        right: '',
+                        top: document.body.scrollTop + document.documentElement.scrollTop,
+                        bottom: ''
+                    }
+                });
+                if (resp.state) {
+                    load_level_list()
+                }
+            });
+        $('#dlg_create').dialog('close')
+    });
+
+
+    // $('#dl').datalist({
+    //     url: '/games/list',
+    //     checkbox: false,
+    //     lines: true,
+    //     valueField: 'id',
+    //     textField: 'title',
+    //     textFormatter: function(value, row, index) {
+    //         str = '<a href="/admin/game/edit/' + row.id + '" class="datalist-link" >'
+
+    //         str += row.title + '</a>'
+
+    //         return str
+    //     }
+    // });
+
+    load_level_list()
+
+});
+</script>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика</title>
+    <!-- <link rel="stylesheet" type="text/css" href="/themes/default/easyui.css"> -->
+    <link rel="stylesheet" id="thlink" type="text/css" href="/themes/<%= defined?(@theme)&&!@theme.to_s.empty? ? @theme : 'default' %>/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/themes/color.css">
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+    <script type="text/javascript" src="/jquery.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.min.js"></script>
+    <!-- <script type="text/javascript" src="/jquery.easyui.mobile.js"></script> -->
+    <script type="text/javascript" src="/locale/easyui-lang-ru.js"></script>
+    <script type="text/javascript" src="/datagrid-scrollview.js"></script>
+    <!-- <script type="text/javascript" src="/datagrid-filter.js"></script> -->
+    <script type="text/javascript" src="/moment.js"></script>
+</head>
+
+<body>
+    <div class="easyui-tabs" data-options="fit:true" style="width:700px;height:250px">
+        <div title="Сводка">
+            <table id="stat_grid">
+            </table>
+        </div>
+        <div title="Лог">
+            <table id="log_grid" data-options="view:scrollview">
+            </table>
+        </div>
+    </div>
+    <div id="tb" style="padding:2px 5px;">
+        Команда:
+        <select class="easyui-combobox" panelHeight="auto" style="width:150px" data-options="url:'/stat/team_filter/<%=game.id%>',onChange:apply_filter_team">
+        </select>
+        Уровень:
+        <select class="easyui-combobox" panelHeight="auto" style="width:150px" data-options="url:'/stat/levels_filter/<%=game.id%>',onChange:apply_filter_level">
+        </select>
+        Событие:
+        <select class="easyui-combobox" panelHeight="auto" style="width:150px" data-options="onChange:apply_filter_action">
+            <option value="">--Все--</option>
+            <option value="code_bonus">Бонус от кода</option>
+            <option value="admin_penalty">Штраф от орга</option>
+            <option value="code_input_wrong">Не верный код</option>
+            <option value="admin_bonus">Бонус от орга</option>
+            <option value="spoiler_input">Ввод спойлера</option>
+            <option value="code_input">Ввод кода</option>
+            <option value="code_input_dup">Повтор кода</option>
+            <option value="level_timeout">Таймаут уровня</option>
+            <option value="level_enter">Вход на уровень</option>
+        </select>
+        Верно:
+        <select class="easyui-combobox" panelHeight="auto" style="width:150px" data-options="onChange:apply_filter_valid">
+            <option value="">--Все--</option>
+            <option value="true">Правильно</option>
+            <option value="false">Ошибочно</option>
+        </select>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="$('#log_grid').datagrid('load')">Reload</a>
+    </div>
+    <div id="dlg" class="easyui-dialog" title="Добавить штраф или бонус" style="width:400px;padding:10px" data-options="
+                iconCls: 'icon-edit',
+                 closed: true,
+                buttons: [{
+                    text:'Ok',
+                    iconCls:'icon-save',
+                    handler:function(){
+                       ff_submit()
+                    }
+                },{
+                    text:'Cancel',
+                    handler:function(){
+                       $('#dlg').dialog('close')
+                    }
+                }]
+            ">
+        <form id="ff" action="/stat/edit/<%=game.id%>" method="post" data-options="success:ff_success_check">
+            <select class="easyui-combobox" panelHeight="auto" label="Команда" name="team" style="width:100%" data-options="required:true,limitToList:true,url:'/stat/team_filter/<%=game.id%>',queryParams:{stat:true}">
+            </select>
+            <select class="easyui-combobox" panelHeight="auto" name="level" label="Уровень" style="width:100%" data-options="required:true,limitToList:true,url:'/stat/levels_filter/<%=game.id%>',queryParams:{stat:true}">
+            </select>
+            <input id="ss" class="easyui-timespinner" name="time" label="Время" style="width:100%;" value="00:00:00" required="required" data-options="showSeconds:true">
+            <input class="easyui-switchbutton" id="sw" style="width:100%;" data-options="onText:'Бонус',offText:'Штраф'" checked>
+            <input class="easyui-textbox" name="message" style="width:100%;height: 60px;" label="Коментарий" required="required" data-options="multiline:true">
+        </form>
+    </div>
+</body>
+
+</html>
+<script type="text/javascript">
+var toolbar = [{
+    text: 'Reload',
+    iconCls: 'icon-reload',
+    handler: function() {
+        $('#stat_grid').datagrid('load')
+    }
+}, '-', {
+    text: 'Правка',
+    iconCls: 'icon-edit',
+    handler: function() {
+        $('#dlg').dialog('open')
+    },
+    disabled: <%= game.closed ? "true" : "false"%>
+}];
+
+function ff_submit() {
+    $.messager.confirm('Confirm', 'Абсолютно уверен в своих действиях?', function(r) {
+        if (r) {
+            $.messager.progress();
+            $('#ff').form('submit', {
+                onSubmit: function(params) {
+                    if ($('#sw').switchbutton('options').checked) {
+                        params.type = 'bonus'
+                    } else {
+                        params.type = 'penalty'
+                    }
+                    // var isValid = $(this).form('validate');
+                    // if (!isValid) {
+                    // $.messager.progress('close'); // hide progress bar while the form is invalid
+                    // }
+                    // return isValid; // return false will stop the form submission
+                }
+            });
+            $('#dlg').dialog('close')
+
+        }
+    });
+}
+
+function ff_success_check(data) {
+    resp = JSON.parse(data);
+    $.messager.show({
+        // title:'My Title',
+        msg: resp.msg,
+        showType: 'slide',
+        style: {
+            right: '',
+            top: document.body.scrollTop + document.documentElement.scrollTop,
+            bottom: ''
+        }
+    });
+    $.messager.progress('close');
+    $('#stat_grid').datagrid('load')
+}
+$('#stat_grid').datagrid({
+    rownumbers: true,
+    fit: true,
+    singleSelect: true,
+    url: '/stat/summary/<%=game.id%>',
+    method: 'get',
+    toolbar: toolbar,
+    frozenColumns: [
+        [{
+            field: 't_title',
+            title: 'Команда',
+            width: 150
+        }]
+    ],
+    columns: [<%= cols.to_json%>]
+
+});
+
+
+$('#log_grid').datagrid({
+    rownumbers: true,
+    fit: true,
+    fitColumns: true,
+    singleSelect: true,
+    url: '/stat/log/<%=game.id%>',
+    method: 'get',
+    toolbar: '#tb',
+    // view: "scrollview",
+    pageSize: 50,
+
+    // frozenColumns: [
+    //     [{
+    //         field: 't_title',
+    //         title: 'Команда',
+    //         width: 150
+    //     }]
+    // ],
+    columns: [
+        [{
+            field: 'ts',
+            title: 'Время',
+            width: 110,
+            fixed: true
+        }, {
+            field: 'team',
+            title: 'Команда',
+            width: 100
+        }, {
+            field: 'user',
+            title: 'Кто',
+            width: 100
+        }, {
+            field: 'code',
+            title: 'Код',
+            width: 50
+        }, {
+            field: 'level',
+            title: 'Уровень',
+            width: 100
+        }, {
+            field: 'input',
+            title: 'Что ввёл',
+            width: 200
+        }, {
+            field: 'msg',
+            title: 'Системные сообщения',
+            width: 400
+        }, {
+            field: 'valid',
+            title: 'Верно',
+            width: 100
+        }, {
+            field: 'action',
+            title: 'Действие',
+            width: 100
+        }]
+    ]
+
+
+});
+var qp = {}
+
+function apply_filter_team(value) {
+    if (value == '') {
+        delete qp.team
+    } else {
+        qp.team = value
+    }
+    $('#log_grid').datagrid('load', qp);
+
+}
+
+function apply_filter_action(value) {
+    if (value == '') {
+        delete qp.action
+    } else {
+        qp.action = value
+    }
+    $('#log_grid').datagrid('load', qp);
+
+}
+
+function apply_filter_valid(value) {
+    if (value == '') {
+        delete qp.valid
+    } else {
+        qp.valid = value
+    }
+    $('#log_grid').datagrid('load', qp);
+
+}
+
+function apply_filter_level(value) {
+    if (value == '') {
+        delete qp.level
+    } else {
+        qp.level = value
+    }
+    $('#log_grid').datagrid('load', qp);
+
+}
+// $('#log_grid').datagrid('enableFilter', [{
+//                 field:'team',
+//                 type:'combobox',
+//                 options:{
+//                     panelHeight:'auto',
+//                     url:'/stat/team_filter/<%=game.id%>',
+//                     onChange:function(value){
+//                         if (value == ''){
+//                             $('#log_grid').datagrid('removeFilterRule', 'status');
+//                         } else {
+//                             $('#log_grid').datagrid('addFilterRule', {
+//                                 field: 'team',
+//                                 op: 'equal',
+//                                 value: value
+//                             });
+//                         }
+//                         $('#log_grid').datagrid('doFilter');
+//                     }
+//                 },
+
+//             },
+//             {
+//                 field:'level',
+//                 type:'combobox',
+//                 options:{
+//                     panelHeight:'auto',
+//                     url:'/stat/levels_filter/<%=game.id%>',
+//                     onChange:function(value){
+//                         if (value == ''){
+//                             $('#log_grid').datagrid('removeFilterRule', 'status');
+//                         } else {
+//                             $('#log_grid').datagrid('addFilterRule', {
+//                                 field: 'level',
+//                                 op: 'equal',
+//                                 value: value
+//                             });
+//                         }
+//                         $('#log_grid').datagrid('doFilter');
+//                     }
+//                 },
+
+//             }
+//             ]);
+</script>

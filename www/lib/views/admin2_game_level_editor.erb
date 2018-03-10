@@ -1,0 +1,352 @@
+<div class="easyui-tabs" data-options="fit:true">
+    <div title="Уровень" id="level_panel_<%=level.id%>">
+        <form method="post" action="/admin/level/level_save">
+            <div style="padding:5px">
+                <input type="hidden" name="id" value="<%=level.id%>">
+                <input name="title" class="easyui-textbox" label="Название:" style="width:99%" value="<%=level.title%>">
+                <input name="hide_title" class="easyui-switchbutton" label="Скрыть Название:" data-options="onText:'Скрыть название',offText:'Показать название'" style="width:99%" <%=level.hide_title ? 'checked' : '' %>>
+                <input name="duration" class="easyui-timespinner" label="Время уровня:" data-options="showSeconds:true" style="width:99%" value="<%=Time.at(level.duration).utc.strftime('%H:%M:%S')%>">
+                <input name="code_hint_timer" class="easyui-timespinner" label="Подсказка на коды:" data-options="showSeconds:true" style="width:99%" value="<%=Time.at(level.code_hint_timer).utc.strftime('%H:%M:%S')%>">
+                <input name="penalty" class="easyui-timespinner" label="Штраф:" data-options="showSeconds:true" style="width:99%" value="<%=Time.at(level.penalty).utc.strftime('%H:%M:%S')%>">
+                <input name="number" class="easyui-numberspinner" label="Номер" data-options="" style="width:99%" value="<%=level.number.to_i%>">
+                <input name="sequence" class="easyui-numberspinner" label="Порядковый номер" data-options="" style="width:99%" value="<%=level.sequence.to_i%>">
+                <input name="need_codes" class="easyui-numberspinner" label="Коды для закрытия" data-options="" style="width:99%" value="<%=level.need_codes.to_i%>">
+                <input class="easyui-combobox" style="width:99%" style="width:100%" data-options="data: [{text: 'Стандартный',value: 'standart'},
+        {text: 'Дестрой',value: 'fallout'},
+        {text: 'Снимаемый',value: 'removed'},
+        {text: 'Снимаемый с плюшками',value: 'removed_w_bonus'},
+        {text: 'Бесконечный',value: 'infinite'},
+         {text: 'Сквозной',value: 'tranzit'},
+        {text: 'Бесконечная олимпийка',value: 'infinite_olympic'},
+       {text: 'Олимпика',value: 'olympic'},
+        {text: 'Олимпика бонусная',value: 'olympic_bonus'}
+        ]" name="type" value="<%=level.type%>" label="Тип уровня:">
+                <input name="answer" class="easyui-textbox" label="Код спойлера:" style="width:99%" value="<%=level.answer.to_a.join(',')%>">
+                <hr>
+                <div>
+                    <label class="textbox-label">Задание:</label>
+                    <div id="question <%=level.id%>" class="level_mce_<%=level.id%>">
+                        <%=level.question%>
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <label class="textbox-label">Спойлер:</label>
+                    <div id="spoiler <%=level.id%>" class="level_mce_<%=level.id%>">
+                        <%=level.spoiler%>
+                    </div>
+                </div>
+                <hr>
+                <div style="text-align:center;margin-top:30px">
+                    <a href="#" class="easyui-linkbutton" style="width:80%;height:40px" onclick="$('#level_panel_<%=level.id%> > form').form('submit')"><span style="font-size:16px">Сохранить</span></a>
+                    <br>
+                    <a href="#" class="easyui-linkbutton" style="width:80%;height:40px" onclick="delete_level()"><span style="font-size:16px;color:red">Удалить уровень</span></a>
+                </div>
+            </div>
+            <!-- <input type="submit" class="easyui-linkbutton"> -->
+        </form>
+    </div>
+    <div title="Коды">
+        <table id="dg_codes"></table>
+    </div>
+    <div title="Подсказки">
+        <table id="dg_hints"></table>
+    </div>
+</div>
+<script type="text/javascript">
+$('#level_panel_<%=level.id%> > form').form({
+    success: function(data) {
+        resp = JSON.parse(data);
+        $.messager.show({
+            // title:'My Title',
+            msg: resp.message,
+            showType: 'slide',
+            style: {
+                right: '',
+                top: document.body.scrollTop + document.documentElement.scrollTop,
+                bottom: ''
+            }
+        });
+        if (resp.state) {
+            $('#center_panel').panel('reload');
+        }
+        // $.messager.alert('Info', data, 'info');
+    }
+
+
+});
+
+function delete_level() {
+    console.log('delete_level <%=level.id%>');
+    $.messager.confirm('Confirm', 'Уверен что хочешь удалить этот уровень?', function(r) {
+        if (r) {
+            $.getJSON("/admin/level_delete/<%=level.id%>", function(data) {
+                console.log(data)
+                $('#center_panel').panel('clear')
+                load_level_list()
+            });
+        }
+    });
+
+}
+$('#cc').combobox({
+    url: '/teams/list',
+    valueField: 'id',
+    textField: 'title',
+    valueField: 'id',
+    limitToList: true,
+    loadFilter: function(data) {
+        result = data.filter(function(item) {
+            return item.id > 0
+        });
+        result.push({
+            id: 0,
+            title: 'Убрать всех'
+        })
+
+        i = data.findIndex(function(item) {
+            return item.id == 0
+        });
+        result[i]["selected"] = true
+        return result
+
+    }
+});
+// $("#btn_tbl_add").bind('click', function() {
+// append(<%=level.id%>);
+// });
+$('#dg_codes').edatagrid({
+    url: '/admin/level/codes_list/<%=level.id%>',
+    saveUrl: '/admin/level/codes_save?level_id=<%=level.id%>',
+    updateUrl: '/admin/level/codes_save',
+    destroyUrl: '/admin/level/codes_del',
+    autoSave: true,
+    fit: true,
+    toolbar: [{
+        iconCls: 'icon-add',
+        handler: function() {
+            $('#dg_codes').edatagrid('addRow')
+        }
+    }, '-', {
+        iconCls: 'icon-remove',
+        handler: function() {
+            $('#dg_codes').edatagrid('destroyRow');
+        }
+    }, '-', {
+        iconCls: 'icon-reload',
+        handler: function() {
+            $('#dg_codes').edatagrid('reload');
+        }
+    }],
+    onSuccess: function(row, index) {
+
+        setTimeout(function() {
+            $('#dg_codes').edatagrid('reload')
+        }, 500)
+
+
+
+    },
+    onError: function(index, row) {
+        console.log(row)
+        setTimeout(function() {
+            alert(row.message);
+        }, 500)
+    },
+    columns: [
+        [{
+            field: 'id',
+            title: 'id',
+            hidden: true
+        }, {
+            field: 'number',
+            title: 'Номер',
+            editor: 'numberspinner',
+            width: 50
+        }, {
+            field: 'title',
+            title: 'Название',
+            editor: 'textbox',
+            width: 100
+        }, {
+            field: 'code',
+            title: 'Код',
+            editor: 'textbox',
+            width: 100
+        }, {
+            field: 'ko',
+            title: 'KO',
+            formatter: function(value, row) {
+                return row.ko;
+            },
+            editor: {
+                type: 'combobox',
+                options: {
+                    valueField: 'ko',
+                    textField: 'ko',
+                    method: 'get',
+                    url: '/admin/level/codes_list_ko/<%=level.game_id%>',
+                    required: true
+                }
+            },
+            width: 50
+        }, {
+            field: 'sektor',
+            title: 'Сектор',
+            editor: 'textbox',
+            width: 100
+        }, {
+            field: 'note',
+            title: 'Текст после взятия',
+            editor: 'textarea',
+            width: 100
+        }, {
+            field: 'hint',
+            title: 'Расположение кода',
+            editor: 'textarea',
+            width: 100
+        }, {
+            field: 'main',
+            title: 'Тип',
+            editor: {
+                type: 'checkbox',
+                options: {
+                    on: 'Осн',
+                    off: 'Бнс'
+                }
+            },
+            // checkbox: true
+        }, {
+            field: 'bonus',
+            title: 'Бонус',
+            editor: {
+                type: 'numberspinner',
+                options: {
+                    showSeconds: true
+                }
+            },
+            width: 50
+        }, ]
+    ],
+    // onClickRow: onClickRow,
+    singleSelect: true,
+    fitColumns: true,
+    idField: 'id',
+    // onAfterEdit: function(index, row, changes) {
+    //     console.log(index, row, changes)
+    //     $.post("/admin/level/codes_save", row, function(resp) {
+
+    //         $.messager.show({
+    //             // title:'My Title',
+    //             msg: resp.message,
+    //             timeout: 600,
+    //             showType: 'slide',
+    //             style: {
+    //                 right: '',
+    //                 top: document.body.scrollTop + document.documentElement.scrollTop,
+    //                 bottom: ''
+    //             }
+    //         });
+    //         if (resp.reload) {
+    //             $('#dg_codes').datagrid('reload');
+    //         }
+    //     }, "json");
+    // }
+
+});
+
+
+$('#dg_hints').edatagrid({
+    url: '/admin/level/hints_list/<%=level.id%>',
+    saveUrl: '/admin/level/hints_save?level_id=<%=level.id%>',
+    updateUrl: '/admin/level/hints_save',
+    destroyUrl: '/admin/level/hints_del',
+    autoSave: true,
+    fit: true,
+    toolbar: [{
+        iconCls: 'icon-add',
+        handler: function() {
+            $('#dg_hints').edatagrid('addRow')
+        }
+    }, '-', {
+        iconCls: 'icon-remove',
+        handler: function() {
+            $('#dg_hints').edatagrid('destroyRow');
+        }
+    }, '-', {
+        iconCls: 'icon-reload',
+        handler: function() {
+            $('#dg_hints').edatagrid('reload');
+        }
+    }],
+    onSuccess: function(row, index) {
+
+        setTimeout(function() {
+            $('#dg_hints').edatagrid('reload')
+        }, 500)
+
+
+
+    },
+    onError: function(index, row) {
+        console.log(row)
+        setTimeout(function() {
+            alert(row.message);
+        }, 500)
+    },
+    columns: [
+        [{
+            field: 'id',
+            title: 'id',
+            hidden: true
+        }, {
+            field: 'timer',
+            title: 'Время до подсказки',
+            editor: {
+                type: 'timespinner',
+                options: {
+                    showSeconds: true
+                }
+            },
+            width: 50
+        }, {
+            field: 'title',
+            title: 'Название',
+            editor: 'textbox',
+            width: 100
+        }, {
+            field: 'text',
+            title: 'Подсказка',
+            editor: 'textarea',
+            width: 100
+        }, ]
+    ],
+    // onClickRow: onClickRow,
+    singleSelect: true,
+    fitColumns: true,
+    idField: 'id',
+
+});
+</script>
+<script type="text/javascript">
+setTimeout(function() {
+    tinymce.init({
+        selector: '.level_mce_<%=level.id%>',
+        inline: false,
+        language: 'ru',
+        // menubar: false,
+        // theme: 'modern',
+        // height: 200,
+        plugins: [
+            'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+            'searchreplace wordcount visualblocks visualchars code fullscreen',
+            'insertdatetime media nonbreaking save table contextmenu ',
+            'emoticons paste textcolor colorpicker textpattern imagetools codesample'
+        ],
+        toolbar1: 'undo redo | insert | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media | fullscreen code',
+        // toolbar2: ' ',
+        // toolbar2: 'print preview media | forecolor backcolor emoticons | codesample',
+        image_advtab: true
+    });
+}, 500)
+</script>

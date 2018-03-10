@@ -1,0 +1,20 @@
+<div class="easyui-navpanel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title"></div>
+            <div class="m-left">
+                <a href="/test/start/<%=game[:id]%>" class="easyui-linkbutton " plain="true" outline="true">Test</a>
+                <a href="/test/reset/<%=game[:id]%>" class="easyui-linkbutton " plain="true" outline="true">Reset</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" class="easyui-menubutton" data-options="iconCls:'icon-more',menu:'#mm',menuAlign:'right',hasDownArrow:false"></a>
+                <!--<a href="/profile" class="easyui-linkbutton" iconCls="icon-man" plain="true" outline="true">Профиль</a>-->
+            </div>
+        </div>
+    </header>
+    <div style="text-align: center;font-size: 20px;">
+        Уровней больше нет
+        <br> двигайте на бриф
+        <br> <a href="/game/exit/<%=game[:id]%>">выход</a>
+    </div>
+</div>

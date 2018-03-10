@@ -1,0 +1,119 @@
+<div class="easyui-navpanel" style="position:relative">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Игры</div>
+            <div class="m-left">
+                <a href="/" class="easyui-linkbutton m-back" plain="true" outline="true">Главная</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" class="easyui-menubutton" data-options="iconCls:'icon-more',menu:'#mm',menuAlign:'right',hasDownArrow:false"></a>
+                <!--<a href="/profile" class="easyui-linkbutton" iconCls="icon-man" plain="true" outline="true">Профиль</a>-->
+            </div>
+        </div>
+    </header>
+    <ul class="m-list" id="dl">
+    </ul>
+</div>
+<div id="game_panel" class="easyui-navpanel">
+    <header>
+        <div class="m-toolbar">
+            <span id="game_panel-title" class="m-title">Detail</span>
+            <div class="m-left">
+                <a href="javascript:void(0)" class="easyui-linkbutton m-back" plain="true" outline="true" onclick="$.mobile.back()">Назад</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" id="btn_start" class="easyui-linkbutton" plain="true" outline="true">Войти в игру</a>
+                <a href="javascript:void(0)" id="btn_join" class="easyui-linkbutton" plain="true" outline="true">Подать заявку</a>
+            </div>
+        </div>
+    </header>
+</div>
+<script type="text/javascript">
+function format_game(data) {
+    var d = JSON.parse(data)
+
+    str = '<div style="padding:10px"><div style="line-height: 32px;font-size: 16px; font-weight: bold; text-align: center;">' + d.title + '</div><hr><input class="easyui-datetimebox" label="Старт:"  data-options="editable:false,readonly:true,formatter:format_datetime" style="width:100%" value="' + d.start + '">'
+    str += '<input class="easyui-datetimebox" label="Стоп:"  data-options="editable:false,readonly:true,formatter:format_datetime" style="width:100%" value="' + d.stop + '">'
+    str += '<input class="easyui-textbox" label="Авторы:"  data-options="editable:false,readonly:true" style="width:100%" value="' + d.autors + '">'
+    str += '<hr><div>' + d.anounce + '</div>'
+    str += '<hr><label style="width:100%" class="textbox-label">Участвуют комманды:</label>'
+    str += '<ul class="m-list" data-options="lines:true,fit: true,border: true" title="Участвуют комманды">'
+    console.log(d.teams)
+    for (var i = 0, len = d.teams.length; i < len; i++) {
+        str += '<li>' + d.teams[i].title
+        if (d.teams[i].adopt) {
+            str += '<div class="m-right"><span class="m-badge c1" style="margin-top:10px">Одобренно</span></div>'
+        }
+        str += '</li>'
+    }
+
+    str += "</ul></div>"
+    if (d.my_team_join) {
+        $('#btn_join').linkbutton({
+            text: 'Снять заявку'
+        })
+        $('#btn_start').linkbutton('enable');
+    } else {
+        $('#btn_join').linkbutton({
+            text: 'Подать заявку'
+        })
+        $('#btn_start').linkbutton('disable');
+    }
+
+    return str
+}
+
+
+function openit(id, name) {
+    window.location = "/game/plain/" + id
+        // $('#game_panel-title').html("");
+        // $('#game_panel').panel({
+        //     href: '/game/' + id,
+        //     extractor: format_game
+
+    // });
+    // $("#btn_start").attr("href", "/game/start/" + id);
+    // $("#btn_join").unbind("click");
+    // $('#btn_join').bind('click', function() {
+
+    //     $.getJSON("/game/join/" + id, function(resp) {
+    //         $.messager.show({
+    //             // title:'My Title',
+    //             msg: resp.message,
+    //             showType: 'slide',
+    //             style: {
+    //                 right: '',
+    //                 top: document.body.scrollTop + document.documentElement.scrollTop,
+    //                 bottom: ''
+    //             }
+    //         });
+    //         if (resp.state) {
+    //             $("#game_panel").panel('refresh');
+    //         }
+    //     });
+    // });
+    // $.mobile.go('#game_panel');
+
+}
+
+$(function() {
+    $('#dl').datalist({
+        url: '/games/list',
+        checkbox: false,
+        lines: true,
+        valueField: 'id',
+        textField: 'title',
+        textFormatter: function(value, row, index) {
+            // console.log(row);
+            // console.log(value);
+            // console.log(index);
+            str = '<a href="javascript:void(0)" class="datalist-link" onclick="openit(' + row.id + ',\'' + row.title.replace(/([\"])/g, '') + '\')">'
+
+            str += row.title + '</a>'
+
+            return str
+        }
+    });
+
+});
+</script>

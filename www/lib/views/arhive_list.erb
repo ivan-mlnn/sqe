@@ -1,0 +1,36 @@
+<div class="easyui-navpanel" id="game_list_panel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Архив игр</div>
+            <div class="m-left">
+                <a href="/" class="easyui-linkbutton m-back" plain="true" outline="true">Главная</a>
+            </div>
+            <div class="m-right">
+            </div>
+        </div>
+    </header>
+    <ul class="m-list" id="dl">
+    </ul>
+</div>
+<script type="text/javascript">
+$(function() {
+
+
+    $('#dl').datalist({
+        url: '/old_games/list',
+        checkbox: false,
+        lines: true,
+        valueField: 'id',
+        textField: 'title',
+        textFormatter: function(value, row, index) {
+            str = '<a href="/arhive/game/list/' + row.id + '" class="datalist-link" >'
+
+            str += row.title + '</a>'
+
+            return str
+        }
+    });
+
+
+});
+</script>

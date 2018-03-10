@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=5.0,minimum-scale=0.25, user-scalable=yes">
+    <title>SQ Engine :
+        <%= game[:title]%>
+    </title>
+    <meta property="og:title" content="<%= game[:title]%>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sqe.mlnn.ru/game/plain/<%= game[:id]%>" />
+    <meta property="og:image" content="https://sqe.mlnn.ru/images/logo.jpg" />
+    <meta property="og:description" content="<%= game[:anounce].gsub(/<\/?[^>]*>/, " ")%>" />
+    <link rel="stylesheet" id="thlink" type="text/css" href="/themes/<%= defined?(@theme)&&!@theme.to_s.empty? ? @theme : 'default' %>/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/themes/mobile.css">
+    <link rel="stylesheet" type="text/css" href="/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/themes/color.css">
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="iphone120.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="ipod152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="iphone180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="ipad167.png">
+    <!-- <link rel="apple-touch-startup-image" href="/iphone180.png"> -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <script type="text/javascript" src="/jquery.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.mobile.js"></script>
+    <script type="text/javascript" src="/locale/easyui-lang-ru.js"></script>
+    <script type="text/javascript" src="/moment.js"></script>
+    <style type="text/css">
+    .text-muted {
+        color: #b3b3b3
+    }
+    
+    .text-primary {
+        color: #337ab7
+    }
+    
+    a.text-primary:hover,
+    a.text-primary:focus {
+        color: #286090
+    }
+    
+    .text-success {
+        color: #1d9d74
+    }
+    
+    a.text-success:hover,
+    a.text-success:focus {
+        color: #157254
+    }
+    
+    .text-info {
+        color: #007dbc
+    }
+    
+    a.text-info:hover,
+    a.text-info:focus {
+        color: #005b89
+    }
+    
+    .text-warning {
+        color: #8a6d3b
+    }
+    
+    a.text-warning:hover,
+    a.text-warning:focus {
+        color: #66512c
+    }
+    
+    .text-danger {
+        color: #d9534f
+    }
+    
+    a.text-danger:hover,
+    a.text-danger:focus {
+        color: #c9302c
+    }
+
+    #anounce_data img {width: auto; height: auto; max-width: 100%;}
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript">
+    moment.locale('ru');
+
+    function format_datetime(date) {
+        console.log(date);
+        return moment(date).format("ddd, MMM Do YYYY, H:mm:ss a");
+    }
+
+    function parse_datetime(date) {
+        console.log(date);
+        return moment(date, ["ddd, MMM Do YYYY, H:mm:ss a", "X", moment.ISO_8601]).toDate();
+    }
+
+    function format_duration(date) {
+        // console.log(date);
+        return moment.utc(date).format("H:mm:ss");
+    }
+
+    function parse_duration(date) {
+        console.log(date);
+        return moment.utc(date, ["H:mm:ss", "X"]).toDate();
+    }
+    // $.fn.timespinner.defaults.parser = parse_duration
+    // $.fn.timespinner.defaults.formatter = format_duration
+    </script>
+    <div id="game_panel" class="easyui-navpanel">
+        <header>
+            <div class="m-toolbar">
+                <span id="game_panel-title" class="m-title"></span>
+                <div class="m-left">
+                    <a href="/games" class="easyui-linkbutton m-back" plain="true" outline="true">Игры</a>
+                </div>
+                <div class="m-right">
+                    <a href="/game/start/<%=game[:id] %>" id="btn_start" class="easyui-linkbutton" plain="true" outline="true" <%=game[:my_team_join] ? '' : 'disabled' %> >Войти в игру</a>
+                    <a href="javascript:void(0)" id="btn_join" class="easyui-linkbutton" plain="true" outline="true" <%=game[:no_auth] ? 'disabled' : '' %>>
+                        <%=game[:my_team_join] ? 'Снять заявку' : 'Подать заявку' %>
+                    </a>
+                    <a href="javascript:void(0)" class="easyui-menubutton" data-options="iconCls:'icon-more',menu:'#mm',menuAlign:'right',hasDownArrow:false"></a>
+                </div>
+            </div>
+        </header>
+        <div style="padding:10px">
+            <div style="line-height: 32px;font-size: 16px; font-weight: bold; text-align: center;">
+                <%= game[:title]%>
+            </div>
+            <hr>
+            <input class="easyui-textbox" id="start" label="Старт:" data-options="editable:false,readonly:true" style="width:100%" value="<%= game[:start] %>">
+            <input class="easyui-textbox" id="stop" label="Стоп:" data-options="editable:false,readonly:true" style="width:100%" value="<%= game[:stop] %>">
+            <input class="easyui-textbox" id="duration" label="По сливам:" data-options="editable:false,readonly:true" style="width:100%" value="<%= game[:duration] %>">
+            <input class="easyui-textbox" label="Авторы:" data-options="editable:false,readonly:true" style="width:100%" value="<%= game[:autors] %>">
+            <hr>
+            <div id="anounce_data">
+                <%= game[:anounce] %>
+            </div>
+            <hr>
+            <label style="width:100%" class="textbox-label">Участвуют комманды:</label>
+            <ul class="m-list" data-options="lines:true,fit: true,border: true" title="Участвуют комманды">
+                <% game[:teams].each{|team| %>
+                    <li>
+                        <%= team[:title] %>
+                            <% if team[:adopt] %>
+                                <div class="m-right"><span class="m-badge c1" style="margin-top:10px">Одобренно</span></div>
+                                <% end %>
+                    </li>
+                    <%}%>
+            </ul>
+        </div>
+        <iframe frameborder="0" allowtransparency="true" scrolling="no" src="https://money.yandex.ru/embed/donate.xml?account=41001314971352&quickpay=donate&payment-type-choice=on&mobile-payment-type-choice=on&default-sum=100&targets=%D0%9D%D0%B0+%D1%80%D0%B0%D0%B7%D0%B2%D0%B8%D1%82%D0%B8%D0%B5+%D0%B4%D0%B2%D0%B8%D0%B6%D0%BA%D0%B0&target-visibility=on&project-name=SQ+Engine&project-site=https%3A%2F%2Fsqe.mlnn.ru&button-text=05&successURL=" width="500" height="117"></iframe>
+    </div>
+    <div id="mm" class="easyui-menu" style="width:150px;">
+        <div data-options="href:'/'">Главная</div>
+        <div class="menu-sep"></div>
+        <div data-options="href:'/games'">Игры</div>
+        <div class="menu-sep"></div>
+        <div data-options="href:'/admin/edit'">Админка</div>
+        <div data-options="href:'/arhive/list'">Архив</div>
+        <div class="menu-sep"></div>
+        <div data-options="iconCls:'icon-man',href:'/profile'">Профиль</div>
+        <div data-options="iconCls:'icon-lock',href:'/logout'">Выход</div>
+        <!--<div data-options="iconCls:'icon-redo'">Redo</div>-->
+        <!--<div class="menu-sep"></div>-->
+        <!--<div>Cut</div>-->
+        <!--<div>Copy</div>-->
+        <!--<div>Paste</div>-->
+        <!--<div class="menu-sep"></div>-->
+        <!--<div>Toolbar</div>-->
+        <!--<div data-options="iconCls:'icon-remove'">Delete</div>-->
+        <!--<div>Select All</div>-->
+    </div>
+</body>
+
+</html>
+<script type="text/javascript">
+$(document).ready(function() {
+    <% if !game[:no_auth] %>
+    $("#btn_join").unbind("click");
+
+    $('#btn_join').bind('click', function() {
+
+        $.getJSON("/game/join/<%=game[:id]%>", function(resp) {
+            $.messager.show({
+                // title:'My Title',
+                msg: resp.message,
+                showType: 'slide',
+                style: {
+                    right: '',
+                    top: document.body.scrollTop + document.documentElement.scrollTop,
+                    bottom: ''
+                }
+            });
+            if (resp.state) {
+                setTimeout(function() {
+                    window.location = "/game/plain/<%=game[:id]%>"
+                }, 2500);
+
+            }
+        });
+    });
+    <%end%>
+    moment.locale('ru');
+    dur = moment.duration(<%= game[:duration].to_i %>, 'seconds');
+    $('#duration').textbox('setValue', 'примерно ' + dur.humanize())
+    $('#start').textbox('setValue', format_datetime(<%= game[:start] %> * 1000))
+    $('#stop').textbox('setValue', format_datetime(<%= game[:stop] %> * 1000))
+});
+</script>

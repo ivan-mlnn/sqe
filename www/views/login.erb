@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SQ Engine</title>
+    <link rel="stylesheet" type="text/css" href="/themes/gray/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/themes/mobile.css">
+    <link rel="stylesheet" type="text/css" href="/themes/icon.css">
+    <script type="text/javascript" src="/jquery.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.mobile.js"></script>
+</head>
+
+<body>
+    <div class="easyui-navpanel">
+        <header>
+            <div class="m-toolbar">
+                <span class="m-title">Добро пожаловать в SQ Engine</span>
+            </div>
+        </header>
+        <div style="margin:20px auto;width:100px;height:100px;border-radius:100px;overflow:hidden">
+            <img src="/images/logo.jpg" style="margin:0;width:100%;height:100%;">
+        </div>
+        <div style="padding:0 20px">
+            <form id="login" method="post" action="/login">
+                <input type="submit" style="display: none;">
+                <div id="msg" style="display:none"></div>
+                <div style=" margin-bottom:10px ">
+                    <input name="login" id="login_i_l" class="easyui-textbox " data-options="prompt: 'Логин',iconCls: 'icon-man' " style="width:100%;height:38px ">
+                </div>
+                <div>
+                    <input name="password" id="pass_i_l" class="easyui-passwordbox " data-options="prompt: 'Пароль' " style="width:100%;height:38px ">
+                </div>
+                <div style="text-align:center;margin-top:30px ">
+                    <a href="javascript:void(0)" onclick="submitForm()" class="easyui-linkbutton " style="width:100%;height:40px "><span style="font-size:16px ">Вход</span></a>
+                </div>
+                <div style="text-align:center;margin-top:30px ">
+                    <a href="javascript:void(0)" onclick="$('#dlg_reg').dialog('open').dialog('center')" class="easyui-linkbutton " plain="true " outline="true " style="width:100px;height:35px "><span style="font-size:16px ">Регистрация</span></a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="dlg_reg" class="easyui-dialog" style="padding:20px 6px;width:80%;" data-options="inline:true,modal:true,closed:true,title:'Регистрация'">
+        <form id="reg_form" method="POST">
+            <div id="reg_msg"></div>
+            <div style="margin-bottom:10px">
+                <input class="easyui-textbox" name="login" id="login_i_r" prompt="Сюда логин" style="width:100%;height:30px">
+            </div>
+            <div>
+                <input class="easyui-textbox" type="password" id="pass_i_r" name="password" prompt="Сюда пароль" style="width:100%;height:30px">
+            </div>
+        </form>
+        <div class="dialog-button">
+            <a href="javascript:void(0)" class="easyui-linkbutton" style="width:100%;height:35px" onclick="submitReg()">Зарегистрироваться</a>
+        </div>
+    </div>
+    <script>
+    $('#login').form({
+        url: '/login',
+        onSubmit: function() {
+            // do some check
+            // return false to prevent submit;
+        },
+        success: function(data) {
+            d = JSON.parse(data);
+            $('#msg').text(d.message);
+            $("#msg").show();
+
+
+
+            if (d.success) {
+                localStorage.setItem("login", $('#login_i_l').textbox('getValue'));
+                localStorage.setItem("password", $('#pass_i_l').textbox('getValue'));
+                window.location = "/";
+            } else {
+                localStorage.removeItem("login");
+                localStorage.removeItem("password");
+
+            }
+            console.log(d)
+        }
+    });
+    $('#reg_form').form({
+        url: '/register',
+        onSubmit: function() {
+            // do some check
+            // return false to prevent submit;
+        },
+        success: function(data) {
+            d = JSON.parse(data);
+            $('#reg_msg').text(d.message);
+            $("#reg_msg").show();
+
+
+
+            if (d.state) {
+                localStorage.setItem("login", $('#login_i_r').textbox('getValue'));
+                localStorage.setItem("password", $('#pass_i_r').textbox('getValue'));
+
+                $('#dlg_reg').dialog('close');
+                auto_login();
+            } else {
+                $('#reg_form').form('reset');
+
+            }
+            console.log(d)
+        }
+    });
+
+    function submitForm() {
+        $('#login').form('submit');
+    }
+
+    function submitReg() {
+        $('#reg_form').form('submit');
+    }
+
+    function auto_login() {
+        if (localStorage.login && localStorage.password) {
+
+            $('#login_i_l').textbox('setValue', localStorage.login)
+            $('#pass_i_l').textbox('setValue', localStorage.password)
+            $('#login').form('submit');
+        }
+    }
+    $(document).ready(function() {
+        auto_login();
+    });
+    </script>
+</body>
+
+</html>

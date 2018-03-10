@@ -1,0 +1,280 @@
+<div class="easyui-navpanel" style="position:relative">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Профиль</div>
+            <div class="m-left">
+                <a href="/" class="easyui-linkbutton m-back" plain="true" outline="true">Главная</a>
+            </div>
+            <div class="m-right">
+            </div>
+        </div>
+    </header>
+    <div class="easyui-accordion" data-options="fit:true,border:false,selected:-1">
+        <div title="Профиль">
+            <p><a href="http://t.me/SQEngine_bot?start=<%=tgusertoken %>">Бот в телеграме</a></p>
+                
+            <form id="f_change_pass" method="POST">
+                <p id="msg_ch_pass"></p>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="title" label="Имя:" prompt="Имя" value="<%=title %>" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-passwordbox" name="pass1" label="Пароль:" prompt="Password" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-passwordbox" name="pass2" label="Повтор пароля:" prompt="Password" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <select id="cb-theme" name="theme" label="Тема" style="width:100%"></select>
+                </div>
+                <p><a href="javascript:void(0)" id="btn_change_pass" class="easyui-linkbutton" style="width:100%">Сохранить</a></p>
+            </form>
+        </div>
+        <div title="Вступить в команду">
+            <form id="f_join_team" method="POST">
+                <p id="msg_join_team"></p>
+                <input id="cc" class="easyui-combobox" style="width:100%" name="team" data-options="valueField:'id',textField:'title',url:'/teams/list',limitToList:true">
+                <p><a href="javascript:void(0)" id="btn_join_team" class="easyui-linkbutton" style="width:100%">Сохранить</a></p>
+            </form>
+        </div>
+        <div title="Создать команду">
+            <form id="f_create_team" method="POST">
+                <p id="msg_create_team"></p>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="title" label="Название:" prompt="Название" style="width:100%">
+                </div>
+                <p><a href="javascript:void(0)" id="btn_create_team" class="easyui-linkbutton" style="width:100%">Сохранить</a></p>
+            </form>
+        </div>
+        <div title="Управление коммандой">
+            <ul class="m-list" id="dl">
+            </ul>
+        </div>
+        <!--<div title="Ajax" href="_content.html" style="padding:10px"></div>-->
+    </div>
+</div>
+<script type="text/javascript">
+$('#f_change_pass').form({
+    url: '/user/change_password',
+    onSubmit: function() {},
+    success: function(data) {
+        d = JSON.parse(data);
+        $('#msg_ch_pass').text(d.message);
+        $("#msg_ch_pass").show();
+
+        if (d.state) {
+            window.location = "/";
+        } else {
+
+        }
+        console.log(d)
+    }
+});
+$('#f_create_team').form({
+    url: '/team/create',
+    onSubmit: function() {},
+    success: function(data) {
+        d = JSON.parse(data);
+        $('#msg_create_team').text(d.message);
+        $("#msg_create_team").show();
+
+        if (d.state) {
+            location.reload(true);
+        } else {
+
+        }
+        console.log(d)
+    }
+});
+$('#f_join_team').form({
+    url: '/team/join',
+    onSubmit: function() {},
+    success: function(data) {
+        d = JSON.parse(data);
+        $('#msg_join_team').text(d.message);
+        $("#msg_join_team").show();
+
+        if (d.state) {
+            location.reload(true);
+        } else {
+
+        }
+        console.log(d)
+    }
+});
+
+function openit(id, cap, adopt, name) {
+    $('#msg_user_mng').html('');
+
+    $('#mng_panel-title').html(name);
+    $('#mng_adopt').switchbutton({
+        checked: adopt
+    });
+    $('#mng_cap').switchbutton({
+        checked: cap
+    });
+    $('#mng_user_id')[0].value = id
+
+    $.mobile.go('#mng_panel');
+
+}
+
+
+$(function() {
+    $('#btn_change_pass').bind('click', function() {
+        $('#f_change_pass').form('submit');
+    });
+    $('#btn_create_team').bind('click', function() {
+        $('#f_create_team').form('submit');
+    });
+    $('#btn_join_team').bind('click', function() {
+        $('#f_join_team').form('submit');
+    });
+    $('#btn_mng_user').bind('click', function() {
+        $('#f_user_mng').form('submit');
+    });
+    $('#f_user_mng').form({
+        url: '/team/mng',
+        onSubmit: function() {},
+        success: function(data) {
+            d = JSON.parse(data);
+            $('#msg_user_mng').text(d.message);
+            if (d.state) {
+                $.mobile.back();
+                $('#dl').datalist('reload');
+            }
+            console.log(d)
+        }
+    });
+    $('#dl').datalist({
+        url: '/team/members',
+        checkbox: false,
+        lines: true,
+        valueField: 'id',
+        textField: 'title',
+        textFormatter: function(value, row, index) {
+            console.log(row);
+            console.log(value);
+            console.log(index);
+            str = '<a href="javascript:void(0)" class="datalist-link" onclick="openit(' + row.id + ',' + row.captain + ',' + row.team_adopt + ',\'' + row.title + '\')">'
+            str += '<div class="m-right">'
+            if (row.captain) {
+                str += '<span class="m-badge c1" style="margin-top:10px">Капитан</span>'
+            }
+            if (!row.team_adopt) {
+                str += '<span class="m-badge" style="margin-top:10px">Неактивный</span>'
+            }
+            str += '</div> '
+            str += row.title + '(' + row.login + ')</a>'
+
+            return str
+        }
+    });
+});
+</script>
+<div id="mng_panel" class="easyui-navpanel">
+    <header>
+        <div class="m-toolbar">
+            <span id="mng_panel-title" class="m-title">Detail</span>
+            <div class="m-left">
+                <a href="javascript:void(0)" class="easyui-linkbutton m-back" plain="true" outline="true" onclick="$.mobile.back()">назад</a>
+            </div>
+        </div>
+    </header>
+    <form id="f_user_mng" method="POST">
+        <input type="hidden" name="user_id" id="mng_user_id">
+        <p id="msg_user_mng"></p>
+        <div style="margin-bottom:10px">
+            <label class="textbox-label">Активный:</label>
+            <input name="adopt" id="mng_adopt" class="easyui-switchbutton">
+        </div>
+        <div style="margin-bottom:10px">
+            <label class="textbox-label">Капитан:</label>
+            <input name="captain" id="mng_cap" class="easyui-switchbutton">
+        </div>
+        <p><a href="javascript:void(0)" id="btn_mng_user" class="easyui-linkbutton" style="width:100%">Сохранить</a></p>
+    </form>
+</div>
+<script type="text/javascript">
+function onChangeTheme(theme) {
+    // localStorage["eu_theme"] = theme;
+    // // var link = $('#content').find('link:first');
+    var link = $('#thlink');
+    link.attr('href', '/themes/' + theme + '/easyui.css');
+}
+$(function() {
+    var themes = [{
+        value: 'default',
+        text: 'Default',
+        group: 'Base'
+    }, {
+        value: 'default-big',
+        text: 'Default-XL',
+        group: 'Base'
+    }, {
+        value: 'gray',
+        text: 'Gray',
+        group: 'Base'
+    }, {
+        value: 'metro',
+        text: 'Metro',
+        group: 'Base'
+    }, {
+        value: 'bootstrap',
+        text: 'Bootstrap',
+        group: 'Base'
+    }, {
+        value: 'black',
+        text: 'Black',
+        group: 'Base'
+    }, {
+        value: 'metro-blue',
+        text: 'Metro Blue',
+        group: 'Metro'
+    }, {
+        value: 'metro-gray',
+        text: 'Metro Gray',
+        group: 'Metro'
+    }, {
+        value: 'metro-green',
+        text: 'Metro Green',
+        group: 'Metro'
+    }, {
+        value: 'metro-orange',
+        text: 'Metro Orange',
+        group: 'Metro'
+    }, {
+        value: 'metro-red',
+        text: 'Metro Red',
+        group: 'Metro'
+    }, {
+        value: 'ui-cupertino',
+        text: 'Cupertino',
+        group: 'UI'
+    }, {
+        value: 'ui-dark-hive',
+        text: 'Dark Hive',
+        group: 'UI'
+    }, {
+        value: 'ui-pepper-grinder',
+        text: 'Pepper Grinder',
+        group: 'UI'
+    }, {
+        value: 'ui-sunny',
+        text: 'Sunny',
+        group: 'UI'
+    }];
+    $('#cb-theme').combobox({
+        groupField: 'group',
+        data: themes,
+        editable: false,
+        // panelHeight: 'auto',
+        onChange: onChangeTheme,
+        onLoadSuccess: function() {
+
+            $(this).combobox('setValue', "<%= defined?(@theme)&&!@theme.to_s.empty? ? @theme : 'default' %>");
+
+        }
+    });
+});
+</script>

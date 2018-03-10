@@ -1,0 +1,6 @@
+<div id="file_list">
+    <% files.each do |file| %>
+        <input labelWidth=200 label="<%= file[:name] %>" class="easyui-textbox" data-options="buttonText:'copy'" value="https://sqe.mlnn.ru<%= file[:path] %>" data-clipboard-text="https://sqe.mlnn.ru<%= file[:path] %>" style="width:100%;">
+        <br />
+        <% end %>
+</div>

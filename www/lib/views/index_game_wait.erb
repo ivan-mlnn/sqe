@@ -1,0 +1,81 @@
+<style type="text/css">
+    #anounce_data img {width: auto; height: auto; max-width: 100%;}
+</style>
+<div class="easyui-navpanel" id="wait_panel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">
+                <%=game[:title]%>
+            </div>
+            <div class="m-left">
+                <a href="/test/start/<%=game[:id]%>" class="easyui-linkbutton " plain="true" outline="true">Test</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" class="easyui-menubutton" data-options="iconCls:'icon-more',menu:'#mm',menuAlign:'right',hasDownArrow:false"></a>
+                <!--<a href="/profile" class="easyui-linkbutton" iconCls="icon-man" plain="true" outline="true">Профиль</a>-->
+            </div>
+        </div>
+    </header>
+    <div id="welcome" style="text-align: center;font-size: 26px;">До игры еще есть время, а пока ждем можно еще раз почитать анонс</div>
+    <div id="timer" style="text-align: center;font-size: 36px;"></div>
+    <hr>
+    <div style="padding:10px">
+        <input class="easyui-datetimebox" label="Старт:" data-options="editable:false,readonly:true,formatter:format_datetime" style="width:100%" value="<%=game[:start].to_i%>">
+        <input class="easyui-datetimebox" label="Стоп:" data-options="editable:false,readonly:true,formatter:format_datetime" style="width:100%" value="<%=game[:stop].to_i%>">
+        <input class="easyui-textbox" id="duration" label="По сливам:" data-options="editable:false,readonly:true" style="width:100%" value="<%= game[:duration] %>">
+            
+        <input class="easyui-textbox" label="Авторы:" data-options="editable:false,readonly:true" style="width:100%" value="<%=game[:autors]%>">
+    </div>
+    <hr>
+    <div id="anounce_data">
+        <%= game[:anounce] %>
+    </div>
+    <hr>
+    <label style="width:90%" class="textbox-label">Участвуют комманды:</label>'
+    <ul class="m-list" data-options="lines:true,fit: true,border: true" title="Участвуют комманды">
+        <% tms.each { |e| %>
+            <li>
+                <%= e[:title] %>
+                    <% if e[:adopt] %>
+                        <div class="m-right"><span class="m-badge c1" style="margin-top:10px">Одобренно</span></div>
+                        <% end %>
+            </li>
+            <%} %>
+    </ul>
+</div>
+<script type="text/javascript">
+var server_time = <%=Time.now.to_f*1000%>
+moment.locale('ru');
+var time_delta = moment(server_time).diff(moment())
+var timeout = <%=game[:start].to_f*1000%>
+
+function update_timeout() {
+    tm_int = 500
+    m = moment(timeout - time_delta).diff(moment())
+    d = moment.duration(m)
+        // format_duration
+        // $('#lvl_timer').text(' [' + d.hours() + ':' + d.minutes() + ':' + d.seconds() + ']')
+    if (d.valueOf() > 60 * 60 * 1000) {
+        $('#timer').text('Начало примерно ' + d.humanize(true))
+        tm_int = 60 * 1000
+    } else if (d.valueOf() < 15 * 1000) {
+        $('#welcome').hide()
+        var a = d.asSeconds().toString().split('.')
+
+        $('#timer').html('  ' + a[0] + '<span style="font-size:15px;">.' + a[1] + '</span>  ')
+        tm_int = 50
+    } else {
+        $('#timer').text(' [' + format_duration(d.valueOf()) + ']')
+    }
+    if (d.valueOf() < 100) {
+        window.location = '/'
+        tm_int = 500
+    }
+    setTimeout(update_timeout, tm_int);
+}
+$(document).ready(function() {
+
+    // alert(supports_html5_storage());
+    setTimeout(update_timeout, 0);
+});
+</script>

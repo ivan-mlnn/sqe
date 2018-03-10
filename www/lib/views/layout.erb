@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=5.0,minimum-scale=0.25, user-scalable=yes">
+    <title>SQ Engine</title>
+    <link rel="stylesheet" id="thlink" type="text/css" href="/themes/<%= defined?(@theme)&&!@theme.to_s.empty? ? @theme : 'default' %>/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/themes/mobile.css">
+    <link rel="stylesheet" type="text/css" href="/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/themes/color.css">
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="iphone120.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="ipod152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="iphone180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="ipad167.png">
+    <!-- <link rel="apple-touch-startup-image" href="/iphone180.png"> -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <script type="text/javascript" src="/jquery.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/jquery.easyui.mobile.js"></script>
+    <script type="text/javascript" src="/locale/easyui-lang-ru.js"></script>
+    <script type="text/javascript" src="/datagrid-scrollview.js"></script>
+    <script type="text/javascript" src="/moment.js"></script>
+    <script type="text/javascript" src="/clipboard.min.js"></script>
+    <style type="text/css">
+    .text-muted {
+        color: #b3b3b3
+    }
+    
+    .text-primary {
+        color: #337ab7
+    }
+    
+    a.text-primary:hover,
+    a.text-primary:focus {
+        color: #286090
+    }
+    
+    .text-success {
+        color: #1d9d74
+    }
+    
+    a.text-success:hover,
+    a.text-success:focus {
+        color: #157254
+    }
+    
+    .text-info {
+        color: #007dbc
+    }
+    
+    a.text-info:hover,
+    a.text-info:focus {
+        color: #005b89
+    }
+    
+    .text-warning {
+        color: #8a6d3b
+    }
+    
+    a.text-warning:hover,
+    a.text-warning:focus {
+        color: #66512c
+    }
+    
+    .text-danger {
+        color: #d9534f
+    }
+    
+    a.text-danger:hover,
+    a.text-danger:focus {
+        color: #c9302c
+    }
+    </style>
+    <link rel="stylesheet" href="/treant/Treant.css">
+    <style type="text/css">
+    .node {
+        /*color: #9CB5ED;*/
+        border: 2px solid #C8C8C8;
+        border-radius: 3px;
+    }
+    
+    .chart {
+        /*height: 1280px;*/
+        /*width: 1280px;*/
+        margin: 5px;
+        margin: 5px auto;
+    }
+    
+    .node-desc {
+        margin: 0px;
+        padding: 2px;
+        white-space: nowrap;
+    }
+    
+    .node-title {
+        /*font-size: 20px;*/
+        /*line-height: 20px;*/
+        /*height: 20px;*/
+        font-weight: bold;
+        padding: 2px;
+        margin: 0;
+    }
+    </style>
+    <script src="/treant/vendor/raphael.js"></script>
+    <script src="/treant/Treant.js"></script>
+    <!-- <link href="/treant/vendor/perfect-scrollbar.css" rel="stylesheet" type="text/css" /> -->
+    <!-- <script src="/treant/vendor/jquery.min.js"></script> -->
+    <!-- <script src="/treant/vendor/jquery.mousewheel.js"></script> -->
+    <!-- <script src="/treant/vendor/perfect-scrollbar.js"></script> -->
+</head>
+
+<body>
+    <script type="text/javascript">
+    $(function() {
+        moment.locale('ru');
+    });
+
+    function format_datetime(date) {
+        console.log(date);
+        return moment(date).format("ddd, MMM Do YYYY, H:mm:ss a");
+    }
+
+    function parse_datetime(date) {
+        console.log(date);
+        return moment(date, ["ddd, MMM Do YYYY, H:mm:ss a", "X", moment.ISO_8601]).toDate();
+    }
+
+    function format_duration(date) {
+        // console.log(date);
+        return moment.utc(date).format("H:mm:ss");
+    }
+
+    function parse_duration(date) {
+        console.log(date);
+        return moment.utc(date, ["H:mm:ss", "X"]).toDate();
+    }
+    $.fn.datetimebox.defaults.parser = parse_datetime
+    $.fn.datetimebox.defaults.formatter = format_datetime
+        // $.fn.timespinner.defaults.parser = parse_duration
+        // $.fn.timespinner.defaults.formatter = format_duration
+    </script>
+    <%= yield %>
+        <div id="mm" class="easyui-menu" style="width:150px;">
+            <div data-options="href:'/',iconCls:'icon-reload'">Обновить</div>
+            <div class="menu-sep"></div>
+            <div data-options="href:'/games'">Игры</div>
+            <div class="menu-sep"></div>
+            <div data-options="href:'/admin/edit'">Админка</div>
+            <div data-options="href:'/arhive/list'">Архив</div>
+            <div class="menu-sep"></div>
+            <div data-options="iconCls:'icon-man',href:'/profile'">Профиль</div>
+            <div data-options="iconCls:'icon-lock',href:'/logout'">Выход</div>
+            <!--<div data-options="iconCls:'icon-redo'">Redo</div>-->
+            <!--<div class="menu-sep"></div>-->
+            <!--<div>Cut</div>-->
+            <!--<div>Copy</div>-->
+            <!--<div>Paste</div>-->
+            <!--<div class="menu-sep"></div>-->
+            <!--<div>Toolbar</div>-->
+            <!--<div data-options="iconCls:'icon-remove'">Delete</div>-->
+            <!--<div>Select All</div>-->
+        </div>
+</body>
+
+</html>
+<script type="text/javascript">
+$(document).ready(function() {
+    new Clipboard('.btn');
+});
+</script>

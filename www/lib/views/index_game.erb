@@ -1,0 +1,627 @@
+<style type="text/css">
+h4 {
+    margin: 0;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    select,
+    textarea,
+    input,
+    input:focus,
+    input:hover {
+        font-size: 16px !important;
+    }
+}
+#level_data img {width: auto; height: auto; max-width: 100%;}
+</style>
+<div class="easyui-navpanel" id="index_panel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-left">
+                <a id="#lvl_menu" href="javascript:void(0)" class="easyui-menubutton" data-options="menu:'#l_list',plain:true,outline:true,hasDownArrow:false"><span id="lvl_name"></span><span id="lvl_timer"></span></a>
+            </div>
+            <!-- <div class="m-left"> -->
+            <!-- <a href="javascript:void(0)" class="easyui-linkbutton m-back" plain="true" outline="true">Back</a> -->
+            <!-- </div> -->
+            <div class="m-right">
+                <a href="javascript:void(0);" onclick="load_levels()" class="easyui-menubutton" data-options="iconCls:'icon-reload',hasDownArrow:false"></a>
+                <a href="javascript:void(0)" class="easyui-menubutton" data-options="iconCls:'icon-more',menu:'#mm',menuAlign:'right',hasDownArrow:false"></a>
+                <!--<a href="/profile" class="easyui-linkbutton" iconCls="icon-man" plain="true" outline="true">Профиль</a>-->
+            </div>
+        </div>
+    </header>
+    <div id="tabs_l" class="easyui-tabs" data-options="fit:true,border:false,justified:true,narrow:true,pill:true,tools:'#tab-tools'">
+        <div title="Уровень"  id="level_data">
+        </div>
+        <div title="Коды" id="level_codes">
+            <div id="level_codes_hint_timer"></div>
+            <div id="level_codes_stat"></div>
+            <hr>
+            <div id="level_codes_list">
+            </div>
+        </div>
+        <div title="Подсказки" id="level_hints">
+        </div>
+        <div title="Лог" id="game_log">
+            <table id="tt" data-options="
+                view:scrollview,rownumbers:false,singleSelect:true,border:false,fit:true,fitColumns:true,scrollbarSize:0,
+                url:'/g/log',
+                autoRowHeight:false,
+                idField:'id',
+                pageSize:20">
+                <thead>
+                    <tr>
+                        <!-- <th field="id" width="100">id</th> -->
+                        <th field="ts" width="30">Время</th>
+                        <th field="user" width="30">Игрок</th>
+                        <th field="msg" width="100">Ответ/Сообщение</th>
+                        <!-- <th field="valid" width="100">valid</th> -->
+                        <!-- <th field="input" width="100">input</th> -->
+                        <!-- <th field="note" width="100">Note</th> -->
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div id="tab-tools">
+        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="refreshPanel()" plain="true"><i class="fa fa-refresh fa-fw" aria-hidden="true"></i></a>
+    </div>
+    <footer style="padding:2px 3px">
+        <div id="status_bar" class="panel-body" style="width:100%;height:15px;font-size: 12px;border-width: 0;">
+            .
+        </div>
+        <form id="l_input" action="/g/input" method="POST">
+            <input class="easyui-textbox" id="g_input" name="data" style="width:100%;height:32px;" data-options="prompt:'Ответ писать сюда',buttonText:' <i class=\'fa fa-paper-plane fa-fw fa-lg\' aria-hidden=\'true\'> </i> '">
+            <input type="submit" name="submit" style="visibility:hidden;position:absolute" />
+        </form>
+    </footer>
+</div>
+<div id="l_list" class="easyui-menu" data-options="onClick:menu_l_Handler"></div>
+<script type="text/javascript">
+function supports_html5_storage() {
+    try {
+        return 'localStorage' in window && window['localStorage'] !== null;
+    } catch (e) {
+        return false;
+    }
+}
+var current_level = localStorage["current_level"]
+var time_delta = 0
+var levels_list = {}
+var last_codes_state
+var code_hint_timeout
+var olip_var
+
+function refreshPanel() {
+    var tab = $('#tabs_l').tabs('getSelected');
+    console.log(tab)
+    if (tab) {
+        var index = $('#tabs_l').tabs('getTabIndex', tab);
+        if (index == 0) {
+            show_lvl()
+        } else if (index == 1) {
+            show_codes()
+        } else if (index == 2) {
+            if ($('#tabs_l').tabs('exists', 'Олимпийка')) {
+                show_codes()
+            } else {
+                show_hints()
+            }
+        } else if (index == 3) {
+            if ($('#tabs_l').tabs('exists', 'Олимпийка')) {
+                show_hints()
+            } else {
+                $('#tt').datagrid('load')
+            }
+        } else if (index == 4) {
+
+            $('#tt').datagrid('load')
+
+        }
+    }
+}
+
+function clean_l_menu() {
+    l = $('#l_list .menu-item')
+    for (var i = 0; i < l.length; i++) {
+        ml.menu('removeItem', l[i])
+    }
+}
+
+function menu_l_Handler(item) {
+    // console.log(item)
+    current_level = item.id.split('_')[1]
+    save_current_lvl()
+}
+
+function set_status(text, spin) {
+    $("#status_bar").html('');
+    if (spin != undefined) {
+        $("#status_bar").append('<i class="fa fa-spinner fa-spin fa-fw"></i>');
+
+    }
+    $("#status_bar").append(text);
+    $("#index_panel").panel('doLayout');
+}
+
+function load_levels() {
+    last_codes_state = undefined
+    set_status('Загружаю уровни...', true)
+    $.getJSON("/g/levels", function(data) {
+
+        clean_l_menu()
+        if (data.state == false) {
+            set_status(data.message, false)
+            setTimeout(function() {
+                window.location.reload(true);
+                // window.location = '/'
+            }, 1000)
+            return
+        }
+        // $('#log').append(data);
+        time_delta = moment(data.server_time).diff(moment())
+        ml = $('#l_list')
+        var current_level_avable = false
+        lvls = data.data
+        for (var i = 0; i < lvls.length; i++) {
+            if (lvls[i].id == current_level) {
+                current_level_avable = true
+                break
+            }
+
+        }
+        if ((current_level == undefined || !current_level_avable) && lvls.length > 0) {
+            current_level = lvls[0].id
+        }
+        levels_list = {}
+        for (var i = 0; i < lvls.length; i++) {
+            // append a top menu item
+            $('#l_list').menu('appendItem', {
+                id: 'lmi_' + lvls[i].id,
+                text: lvls[i].title,
+            });
+            levels_list[lvls[i].id] = lvls[i]
+        }
+        set_status('Готово')
+
+        save_current_lvl()
+        if (Object.keys(levels_list).length == 0) {
+            window.location.reload(true);
+            // window.location = '/'
+        }
+
+
+    });
+    var itemEl = $('#lmi_13')[0]; // the menu item element // var item = $('#l_list').menu('getItem', itemEl); // console.log(item);
+
+}
+
+function save_current_lvl() {
+    localStorage["current_level"] = current_level
+    $("#l_list > .menu-item .icon-ok").each(function(index) {
+        // console.log($(this).parent());
+        $('#l_list').menu('setIcon', {
+            target: $(this).parent()[0],
+            iconCls: ''
+        });
+    });
+    var itemEl = $('#lmi_' + current_level)[0];
+    // $('#log').append(itemEl.innerText)
+    if (itemEl != undefined) {
+        $('#l_list').menu('setIcon', {
+            target: itemEl,
+            iconCls: 'icon-ok'
+        });
+        $("#lvl_name").text(itemEl.innerText)
+    }
+    if (current_level != undefined && levels_list[current_level] != undefined) {
+
+        show_lvl();
+        show_codes();
+        show_hints();
+    }
+
+
+}
+
+function show_lvl() {
+    set_status('Загружаю уровнь', true)
+
+    $.getJSON("/g/level/info/" + current_level, function(data) {
+        // console.log(data)
+
+        $('#level_data').html('')
+        if (data.state) {
+            var l = data.data
+            dur = moment.duration(l.duration, 'seconds')
+            if (l.spoiler) {
+                $('#level_data').append('<h4>Спойлер:</h4>' + l.spoiler)
+                $("#level_data").scrollTop(0);
+
+            }
+            if (l.answer) {
+                $('#level_data').append('<h4>Ответ:</h4>' + l.answer)
+            }
+            if (l.question) {
+                $('#level_data').append('<h4>Задание:</h4>' + l.question)
+
+            }
+
+        } else {
+            $('#level_data').text(data.message)
+            setTimeout(load_levels, 1000)
+        }
+        set_status('Готово')
+
+    });
+}
+
+function code_info(c) {
+    str = "<h4>"
+    if (c.main) {
+        str += '🔦'
+    } else {
+        str += '🎉'
+    }
+    //str += '<b>КО:</b>' + c.ko + ' '
+    str += c.sektor + ': №' + c.number
+    str += ' <b>КО:</b>' + c.ko + ' '
+    if (c.bonus != 0) {
+        if (c.bonus > 0) {
+            str += ' <b>+</b>'
+        } else {
+            str += ' <b>-</b>'
+        }
+
+        str += format_duration(Math.abs(c.bonus * 1000))
+    }
+    str += '</h4>'
+    if (c.title != '') {
+        str += '<div><b>Название: </b>' + c.title + '</div>'
+    }
+    if (c.ts != undefined) {
+        str += '<div><b><i class="fa fa-check-square fa-lg fa-fw text-success" aria-hidden="true"></i>Принят: </b>' + c.ts + ', <b> Вбил: </b>' + c.user + ' [' + c.code + ']</div>'
+    }
+    if (c.hint) {
+        str += '<div><b>Расположение: </b>' + c.hint + '</div>'
+    }
+
+    if (c.note) {
+        str += '<div><b>Текст: </b>' + c.note + '</div>'
+    }
+    $('#code_' + c.id).html(str)
+}
+
+function code_status(r) {
+    var str = ''
+    if (r.valid && r.type == "code") {
+        str += '<i class="fa fa-check-square  fa-fw text-success" aria-hidden="true"></i>'
+        if (r.main) {
+            str += '🔦'
+        } else {
+            str += '🎉'
+        }
+        str += ' Код ' + r.sektor + ': №' + r.number + ' принят '
+        if (r.bonus != 0) {
+            if (r.bonus > 0) {
+                str += ' <b>+</b>'
+            } else {
+                str += ' <b>-</b>'
+            }
+
+            str += format_duration(Math.abs(r.bonus * 1000))
+        }
+        str += ' <b>КО:</b> ' + r.ko + ' '
+
+        str += '<i class="fa fa-check-square  fa-fw text-success" aria-hidden="true"></i>'
+
+        code_info(r)
+        if ($('#tabs_l').tabs('exists', 'Олимпийка')) {
+            setTimeout(show_codes, 1000);
+
+        }
+        // setTimeout(show_codes, 1000)
+    } else if (!r.valid && r.type == "code") {
+        str += '<i class="fa fa-times-circle  fa-fw text-danger" aria-hidden="true"></i>'
+        str += ' Код "' + r.input + '" не принят '
+        str += '<i class="fa fa-times-circle  fa-fw text-danger" aria-hidden="true"></i>'
+
+    } else if (r.valid && r.type == "code_dup") {
+        str += '<i class="fa fa-exclamation-triangle  fa-fw text-warning" aria-hidden="true"></i>'
+        str += '<b> Повтор </b>' + r.sektor + ': №' + r.number + ' [' + r.ts + '], <b> Вбил: </b>' + r.user
+        str += '<b> КО:</b> ' + r.ko
+
+        str += '<i class="fa fa-exclamation-triangle  fa-fw text-warning" aria-hidden="true"></i>'
+        code_info(r)
+    }
+    set_status(str)
+}
+
+function show_codes() {
+    set_status('Загружаю коды...', true)
+
+    $.getJSON("/g/level/codes/" + current_level, function(data) {
+        // console.log(data)
+
+        $('#level_codes_list').html('')
+        $('#level_codes_hint_timer').html('')
+        if (data.state) {
+            var l = data.data
+            for (var i = 0; i < l.length; i++) {
+                $('#level_codes_list').append('<div id="code_' + l[i].id + '"></div><hr>')
+                code_info(l[i])
+            }
+            code_stats(data.stat)
+
+            code_hint_timeout = data.hint_timer
+            if (data.olympic) {
+                if ($('#tabs_l').tabs('exists', 'Олимпийка') == false) {
+                    $('#tabs_l').tabs('add', {
+                        title: 'Олимпийка',
+                        content: '<div id="olimpic_chart" style="height:100%"></div>',
+                        id: "olymic_tab",
+                        index: 2,
+                        selected: false
+                    });
+                }
+                draw_olypic_chart(data.data)
+                    //draw chart
+            } else {
+                if ($('#tabs_l').tabs('exists', 'Олимпийка')) {
+                    if (olip_var != undefined) {
+                        olip_var.destroy()
+                        olip_var = undefined
+                    }
+                    $('#tabs_l').tabs('close', 'Олимпийка')
+
+                }
+            }
+        } else {
+            $('#level_codes_list').text(data.message)
+            setTimeout(load_levels, 1000)
+        }
+        set_status('Готово')
+    });
+}
+
+function show_hints() {
+    set_status('Загружаю подсказки...', true)
+
+    $.getJSON("/g/level/hints/" + current_level, function(data) {
+        // console.log(data)
+
+        $('#level_hints').html('')
+        if (data.state) {
+            var l = data.data
+            for (var i = 0; i < l.length; i++) {
+                $('#level_hints').append('<div id="hint_' + l[i].id + '"></div><hr>')
+                if (l[i].title) {
+                    $('#hint_' + l[i].id).append('<b>' + l[i].title + ':</b>')
+                }
+                if (l[i].text == undefined) {
+                    $('#hint_' + l[i].id).append('<div class="hint_timer"></div>')
+                    $('#hint_' + l[i].id).data('info', l[i])
+                } else {
+                    $('#hint_' + l[i].id).append('<div>' + l[i].text + '<div>')
+
+                }
+                // $('#hint_' + l[i].id).append('<div class="hint_timer"></div>')
+
+            }
+            // code_stats(data.stat)
+
+        } else {
+            $('#level_hints').text(data.message)
+            setTimeout(load_levels, 1000)
+        }
+        set_status('Готово')
+    });
+}
+
+function update_timeout() {
+    if (current_level != undefined && levels_list[current_level] != undefined) {
+        m = moment(levels_list[current_level].timeout - time_delta).diff(moment())
+        d = moment.duration(m)
+            // format_duration
+            // $('#lvl_timer').text(' [' + d.hours() + ':' + d.minutes() + ':' + d.seconds() + ']')
+        $('#lvl_timer').text(' [' + format_duration(d.valueOf()) + ']')
+        if (d.valueOf() < 0) {
+            load_levels()
+        }
+        if (code_hint_timeout != undefined) {
+            m = moment(code_hint_timeout - time_delta).diff(moment())
+            d = moment.duration(m)
+                // format_duration
+                // $('#lvl_timer').text(' [' + d.hours() + ':' + d.minutes() + ':' + d.seconds() + ']')
+            $('#level_codes_hint_timer').text('Подсказка через [' + format_duration(d.valueOf()) + ']')
+            if (d.valueOf() < 0) {
+                show_codes()
+            }
+        }
+        $('#level_hints > * > .hint_timer').each(function(index) {
+            var data = $(this).parent().data('info')
+            if (data.text == undefined) {
+                var m = moment(data.timeout - time_delta).diff(moment())
+                var d = moment.duration(m)
+                $(this).text(' [' + format_duration(d.valueOf()) + ']')
+                if (d.valueOf() < 0) {
+                    show_hints()
+                }
+            }
+        });
+    }
+}
+
+function code_stats(sts) {
+    $('#level_codes_stat')
+    console.log(sts)
+    console.log(last_codes_state)
+    if (last_codes_state) {
+        if (sts.tm + sts.tb != last_codes_state.tm + last_codes_state.tb + 1 && sts.tm + sts.tb != last_codes_state.tm + last_codes_state.tb) {
+            setTimeout(show_codes, 1000)
+        }
+    }
+    last_codes_state = sts
+    str = "Всего: <b>" + (sts.mc + sts.bc) + "</b>"
+    str += " Основных: <b>" + sts.mc + "</b>"
+    str += " Бонусных: <b>" + sts.bc + "</b><br>"
+    str += "Принято: <b>" + (sts.tm + sts.tb) + "</b>"
+    str += " Основных: <b>" + sts.tm + "</b>"
+    str += " Бонусных: <b>" + sts.tb + "</b><br>"
+    str += " Нужно: <b>" + sts.n + "</b>"
+    str += " Осталось: <b>" + (sts.n - sts.tm) + "</b>"
+
+    $('#level_codes_stat').html(str)
+    if (sts.n > 0 && sts.n - sts.tm <= 0) {
+        setTimeout(load_levels, 0)
+    }
+
+}
+
+function draw_olypic_chart(d) {
+    // body...
+
+    function filterchild(i) {
+        // console.log("f:" + this);
+        // console.log(i.sektor == this);
+        if (this == undefined) {
+            return i.sektor == 0
+        } else {
+            return i.sektor == this
+        }
+    }
+
+    function get_childs(item) {
+        var txt = {}
+        if (item.code == undefined) {
+            txt.desc = "Код №" + item.number
+        } else {
+            txt.title = item.code
+        }
+        var node = {
+                text: txt
+            }
+            // console.log(item);
+        childs = d.filter(filterchild, item.number)
+            // console.log(childs);
+        if (childs.length > 0) {
+            childs = childs.map(get_childs, item.number)
+            node.children = childs
+        }
+        // item.children = childs
+        return node
+    }
+
+    function root() {
+        r = d.find(function(item) {
+                return item.sektor == 0
+            })
+            // r = get_childs(r, 0, d)
+        return get_childs(r)
+    }
+
+    dt = root()
+    console.log(dt);
+    var tree_structure = {
+        chart: {
+            container: "#olimpic_chart",
+            levelSeparation: 10,
+            siblingSeparation: 5,
+            subTeeSeparation: 5,
+            rootOrientation: "EAST",
+            scrollbar: "native",
+            node: {
+                collapsable: true
+
+            },
+            connectors: {
+                style: {
+                    "stroke-width": 2,
+                }
+            }
+
+        },
+        nodeStructure: dt
+    }
+    if (olip_var != undefined) {
+        olip_var.destroy()
+    }
+    olip_var = new Treant(tree_structure, null, $);
+}
+$(document).ready(function() {
+    load_levels();
+    // alert(supports_html5_storage());
+    setInterval(update_timeout, 500);
+    $('#l_input').form({
+        iframe: false,
+        novalidate: true,
+        onSubmit: function(param) {
+            txt = $("#g_input").textbox('getValue')
+            if (txt.length == 0) {
+                return false
+            }
+            set_status('Отправляю...', true)
+
+            // do some check
+            // return false to prevent submit;
+            param["level"] = current_level
+                // console.log(param)
+            return true
+        },
+        success: function(data) {
+            resp = JSON.parse(data)
+
+            if (resp.state == false) {
+                set_status(resp.message)
+                setTimeout(load_levels, 1000)
+            } else {
+                r = resp.data
+                if (r.valid && r.type == "spoiler") {
+                    set_status('\u2705 Ответ принят \u2705')
+                    setTimeout(show_lvl, 1000)
+                } else if (!r.valid && r.type == "spoiler") {
+                    set_status('\u274C Ответ не принят \u274C')
+                } else if (r.type == "code" || r.type == "code_dup") {
+                    code_status(r)
+                }
+                code_stats(resp.stat)
+
+            }
+            // console.log(resp.data)
+            $('#l_input').form('clear')
+                // set_status(data)
+
+        }
+    });
+    $("#g_input").textbox('button').bind('click', function() {
+        $('#l_input').form('submit')
+    });
+    $('#tt').datagrid({
+        rowStyler: function(index, row) {
+            if (row.act == 'code_input') {
+                return 'background-color:green;color:#fff;'; // return inline style
+                // the function can return predefined css class and inline style
+                // return {class:'r1', style:{'color:#fff'}};   
+            } else if (row.act == 'code_input_wrong') {
+                return 'background-color:DarkRed;color:#fff;'; // return inline style
+            } else if (row.act == 'code_input_dup') {
+                return 'background-color:GoldenRod ;color:#fff;'; // return inline style
+            } else if (row.act == 'spoiler_input' && row.valid) {
+                return 'background-color:seagreen ;color:#fff;'; // return inline style
+            } else if (row.act == 'spoiler_input' && !row.valid) {
+                return 'background-color:Maroon  ;color:#fff;'; // return inline style
+            }
+        }
+    });
+
+    $('#tabs_l').tabs({
+        onSelect: function(title) {
+            if (title == 'Олимпийка') {
+                if (olip_var != undefined) {
+                    olip_var.tree.reload()
+                }
+            }
+        }
+    })
+});
+</script>

@@ -1,0 +1,187 @@
+<script src="/tinymce/tinymce.min.js"></script>
+<div class="easyui-navpanel" id="game_panel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Админка</div>
+            <div class="m-left">
+                <a href="/" class="easyui-linkbutton m-back" plain="true" outline="true">Главная</a>
+                <a href="/stat/<%=game_id%>" class="easyui-linkbutton" plain="true" target="_blank" outline="true">Стата</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" class="easyui-linkbutton " plain="true" outline="true" onclick="$('#dlg_create').dialog('open').dialog('center')">Создать уровень</a>
+            </div>
+        </div>
+    </header>
+    <div id="ac" class="easyui-accordion" data-options="fit:false,border:true,selected:-1,height:1000">
+    </div>
+</div>
+</div>
+<div id="dlg_create" class="easyui-dialog" style="padding:20px 6px;width:80%;" data-options="inline:true,modal:true,closed:true,title:'Создать уровень'">
+    <div style="margin-bottom:10px">
+        <input id="create_level_title" class="easyui-textbox" prompt="Название" style="width:100%;height:30px">
+    </div>
+    <div class="dialog-button">
+        <a id="btn_level_create" href="javascript:void(0)" class="easyui-linkbutton" style="width:100%;height:35px">Создать</a>
+    </div>
+</div>
+<div id="p_codes" class="easyui-navpanel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Коды</div>
+            <div class="m-left">
+                <a href="#" class="easyui-linkbutton m-back" data-options="plain:true,outline:true,back:true">Назад</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="btn_tbl_add"></a>
+                <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="removeit()"></a>
+                <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="accept()"></a>
+                <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-undo',plain:true" onclick="reject()"></a>
+            </div>
+        </div>
+    </header>
+    <div style="">
+        <table id="dg_codes"></table>
+    </div>
+</div>
+<div id="p_hints" class="easyui-navpanel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Подсказки</div>
+            <div class="m-left">
+                <a href="#" class="easyui-linkbutton m-back" data-options="plain:true,outline:true,back:true">Назад</a>
+            </div>
+        </div>
+    </header>
+    <div style="">
+        <table id="dg_hints"></table>
+    </div>
+</div>
+<script type="text/javascript">
+function load_ac() {
+    tinymce.remove();
+    ac = $('#ac')
+    while (ac.accordion('panels').length > 0) {
+        ac.accordion('remove', 0)
+    }
+    $.getJSON("/admin/game/level_list/<%= game_id%>", function(data) {
+
+        for (var i = 0, len = data.list.length; i < len; i++) {
+
+            ac.accordion('add', {
+                title: data.list[i].title,
+                href: data.list[i].link,
+                selected: false,
+                id: "level_panel_" + data.list[i].id
+            });
+
+        }
+        ac.accordion({
+            height: 500 + data.list.length * 40
+        });
+
+
+    });
+}
+var editIndex = undefined;
+
+function endEditing() {
+    if (editIndex == undefined) {
+        return true
+    }
+    if ($('#dg_codes').datagrid('validateRow', editIndex)) {
+        $('#dg_codes').datagrid('endEdit', editIndex);
+        editIndex = undefined;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function append(id_lvl) {
+    if (endEditing()) {
+        $('#dg_codes').datagrid('appendRow', {
+            id: null,
+            level_id: id_lvl
+        });
+        editIndex = $('#dg_codes').datagrid('getRows').length - 1;
+        $('#dg_codes').datagrid('selectRow', editIndex)
+            .datagrid('beginEdit', editIndex);
+    }
+}
+
+function onClickRow(index) {
+    if (editIndex != index) {
+        if (endEditing()) {
+            $('#dg_codes').datagrid('selectRow', index)
+                .datagrid('beginEdit', index);
+            editIndex = index;
+        } else {
+            $('#dg_codes').datagrid('selectRow', editIndex);
+        }
+    }
+}
+
+function removeit() {
+    if (editIndex == undefined) {
+        return
+    }
+    $('#dg_codes').datagrid('cancelEdit', editIndex)
+        .datagrid('deleteRow', editIndex);
+    editIndex = undefined;
+}
+
+function accept() {
+    if (endEditing()) {
+        $('#dg_codes').datagrid('acceptChanges');
+    }
+}
+
+function reject() {
+    $('#dg_codes').datagrid('rejectChanges');
+    editIndex = undefined;
+}
+
+$(function() {
+    $("#btn_level_create").bind('click', function() {
+        $.getJSON("/admin/game/create_level", {
+                title: $('#create_level_title').textbox('getValue'),
+                game_id: <%= game_id%>
+            },
+            function(resp) {
+                $.messager.show({
+                    // title:'My Title',
+                    msg: resp.message,
+                    showType: 'slide',
+                    style: {
+                        right: '',
+                        top: document.body.scrollTop + document.documentElement.scrollTop,
+                        bottom: ''
+                    }
+                });
+                if (resp.state) {
+                    load_ac()
+                }
+            });
+        $('#dlg_create').dialog('close')
+    });
+
+
+    // $('#dl').datalist({
+    //     url: '/games/list',
+    //     checkbox: false,
+    //     lines: true,
+    //     valueField: 'id',
+    //     textField: 'title',
+    //     textFormatter: function(value, row, index) {
+    //         str = '<a href="/admin/game/edit/' + row.id + '" class="datalist-link" >'
+
+    //         str += row.title + '</a>'
+
+    //         return str
+    //     }
+    // });
+
+    load_ac();
+
+});
+</script>

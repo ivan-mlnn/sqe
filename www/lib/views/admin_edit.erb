@@ -1,0 +1,65 @@
+<div class="easyui-navpanel" id="game_list_panel">
+    <header>
+        <div class="m-toolbar">
+            <div class="m-title">Админка</div>
+            <div class="m-left">
+                <a href="/" class="easyui-linkbutton m-back" plain="true" outline="true">Главная</a>
+            </div>
+            <div class="m-right">
+                <a href="javascript:void(0)" class="easyui-linkbutton " plain="true" outline="true" onclick="$('#dlg_create').dialog('open').dialog('center')">Создать</a>
+            </div>
+        </div>
+    </header>
+    <ul class="m-list" id="dl">
+    </ul>
+</div>
+<div id="dlg_create" class="easyui-dialog" style="padding:20px 6px;width:80%;" data-options="inline:true,modal:true,closed:true,title:'Создать игру'">
+    <div style="margin-bottom:10px">
+        <input id="create_game_title" class="easyui-textbox" prompt="Название" style="width:100%;height:30px">
+    </div>
+    <div class="dialog-button">
+        <a id="btn_create" href="javascript:void(0)" class="easyui-linkbutton" style="width:100%;height:35px" onclick="$('#dlg_create').dialog('close')">Создать</a>
+    </div>
+</div>
+<script type="text/javascript">
+$(function() {
+    $("#btn_create").bind('click', function() {
+        $.getJSON("/admin/game/create", {
+                title: $('#create_game_title').textbox('getValue')
+            },
+            function(resp) {
+                $.messager.show({
+                    // title:'My Title',
+                    msg: resp.message,
+                    showType: 'slide',
+                    style: {
+                        right: '',
+                        top: document.body.scrollTop + document.documentElement.scrollTop,
+                        bottom: ''
+                    }
+                });
+                if (resp.state) {
+                    $("#game_list_panel").panel('refresh');
+                }
+            });
+        $('#dlg_create').dialog('close')
+    });
+
+    $('#dl').datalist({
+        url: '/games/list',
+        checkbox: false,
+        lines: true,
+        valueField: 'id',
+        textField: 'title',
+        textFormatter: function(value, row, index) {
+            str = '<a href="/admin2/game/edit/' + row.id + '" class="datalist-link" >'
+
+            str += row.title + '</a>'
+
+            return str
+        }
+    });
+
+
+});
+</script>

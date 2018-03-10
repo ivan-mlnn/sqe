@@ -1,0 +1,60 @@
+<form id="anounce_form_<%=game.id%>">
+    <div style="padding:5px">
+        <input type="hidden" name="id" value="<%=game.id%>">
+        <input name="title" class="easyui-textbox" label="Название:" readonly="true" labelAlign="left" style="width:70%" value="<%=game.title%>">
+        <br>
+        <input name="start" id="anounce_start_value" class="easyui-datetimebox" readonly="true" label="Старт:" data-options="" data-options="" labelAlign="left" style="width:70%" value="<%=game.start.to_i%>">
+        <br>
+        <input name="stop" id="anounce_stop_value" class="easyui-datetimebox" readonly="true" label="Стоп:" data-options="" labelAlign="left" style="width:70%" value="<%=game.stop.to_i%>">
+        <br>
+        <!-- <input name="team_id" class="easyui-textbox" label="Авторы:" data-options="editable:false,readonly:true" style="width:99%" value="<%=game.team_id%>"> -->
+        <input id="cc" class="easyui-tagbox" labelAlign="left" readonly="true" style="width:calc(70% - 110px)" name="users[]" value="<%= autors.join(',') %>" label="Авторы:">
+        <br>
+        <div id="anounce" class="myeditablediv">
+            <%=game.anounce%>
+        </div>
+    </div>
+    <!-- <input type="submit" class="easyui-linkbutton"> -->
+</form>
+<script type="text/javascript">
+(function() {
+    // ...
+
+
+    $('#cc').tagbox({
+        url: '/users_teams/list',
+        method: 'get',
+        valueField: 'id',
+        textField: 'title',
+        groupField: 'team',
+        limitToList: true,
+        multiple: true,
+        disabled: true,
+        hasDownArrow: true,
+        groupPosition: 'sticky',
+        // label: "Авторы",
+        formatter: function(row) {
+            // var opts = $(this).combobox('options');
+            // return row[opts.textField];
+            return row['title'] + ' [' + row['login'] + ']'
+        },
+        filter: function(q, row) {
+            // var opts = $(this).combobox('options');
+            // console.log(row);
+            // console.log(row['title'].indexOf(q));
+            return (row['title'].toLowerCase().indexOf(q) >= 0) || (row['login'].indexOf(q) >= 0);
+        },
+        tagFormatter: function(value, row) {
+            // console.log(value);
+            if (row != undefined) {
+                if (row.team == '--Отщепенцы--') {
+                    return row.title;
+                } else {
+                    return row.title + ' [' + row.team + ']'
+                }
+            }
+        },
+
+    });
+}());
+</script>

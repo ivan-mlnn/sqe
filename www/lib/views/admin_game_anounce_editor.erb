@@ -1,0 +1,123 @@
+<script type="text/javascript">
+tinymce.init({
+    selector: '#anounce',
+    inline: false,
+    language: 'ru',
+    // menubar: false,
+    // theme: 'modern',
+    plugins: [
+        'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+        'searchreplace wordcount visualblocks visualchars code fullscreen',
+        'insertdatetime media nonbreaking save table contextmenu ',
+        'emoticons paste textcolor colorpicker textpattern imagetools codesample'
+    ],
+    toolbar1: 'undo redo | insert | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media | fullscreen code',
+    // toolbar2: ' ',
+    // toolbar2: 'print preview media | forecolor backcolor emoticons | codesample',
+    image_advtab: true
+});
+</script>
+<iframe frameborder="0" allowtransparency="true" scrolling="no" src="https://money.yandex.ru/embed/donate.xml?account=41001314971352&quickpay=donate&payment-type-choice=on&mobile-payment-type-choice=on&default-sum=100&targets=%D0%9D%D0%B0+%D1%80%D0%B0%D0%B7%D0%B2%D0%B8%D1%82%D0%B8%D0%B5+%D0%B4%D0%B2%D0%B8%D0%B6%D0%BA%D0%B0&target-visibility=on&project-name=SQ+Engine&project-site=https%3A%2F%2Fsqe.mlnn.ru&button-text=05&successURL=" width="508" height="117"></iframe>
+<form method="post" action="/admin/game/anounce_save" id="anounce_form_<%=game.id%>">
+    <div style="padding:5px">
+        <input type="hidden" name="id" value="<%=game.id%>">
+        <input name="title" class="easyui-textbox" label="Название:" labelAlign="left" style="width:70%" value="<%=game.title%>">
+        <br>
+        <input name="start" id="anounce_start_value" class="easyui-datetimebox" label="Старт:" data-options="" data-options="" labelAlign="left" style="width:70%" value="<%=game.start.to_i%>">
+        <br>
+        <input name="stop" id="anounce_stop_value" class="easyui-datetimebox" label="Стоп:" data-options="" labelAlign="left" style="width:70%" value="<%=game.stop.to_i%>">
+        <br>
+        <!-- <input name="team_id" class="easyui-textbox" label="Авторы:" data-options="editable:false,readonly:true" style="width:99%" value="<%=game.team_id%>"> -->
+        <input id="cc" class="easyui-tagbox" labelAlign="left" style="width:calc(70% - 110px)" name="users[]" value="<%= autors.join(',') %>" label="Авторы:">
+        <br>
+        <div id="anounce" class="myeditablediv">
+            <%=game.anounce%>
+        </div>
+        <div style="text-align:center;margin-top:30px">
+            <a href="#" class="easyui-linkbutton" style="width:80%;height:40px" onclick="$('#anounce_form_<%=game.id%>').form('submit')"><span style="font-size:16px">Сохранить</span></a>
+        </div>
+    </div>
+    <!-- <input type="submit" class="easyui-linkbutton"> -->
+</form>
+<script type="text/javascript">
+(function() {
+    // ...
+
+    $('#anounce_form_<%=game.id%>').form({
+        onSubmit: function(param) {
+            console.log(param)
+            param.start = parse_datetime($("#anounce_start_value").datetimebox('getValue'));
+            param.stop = parse_datetime($("#anounce_stop_value").datetimebox('getValue'));
+        },
+        success: function(data) {
+            resp = JSON.parse(data);
+            $.messager.show({
+                // title:'My Title',
+                msg: resp.message,
+                showType: 'slide',
+                style: {
+                    right: '',
+                    top: document.body.scrollTop + document.documentElement.scrollTop,
+                    bottom: ''
+                }
+            });
+            if (resp.state) {
+                // load_ac();
+                $('#center_panel').panel('clear');
+            }
+            // $.messager.alert('Info', data, 'info');
+        }
+
+
+    });
+    $('#cc').tagbox({
+        url: '/users_teams/list',
+        method: 'get',
+        valueField: 'id',
+        textField: 'title',
+        groupField: 'team',
+        limitToList: true,
+        multiple: true,
+        hasDownArrow: true,
+        groupPosition: 'sticky',
+        // label: "Авторы",
+        formatter: function(row) {
+            // var opts = $(this).combobox('options');
+            // return row[opts.textField];
+            return row['title'] + ' [' + row['login'] + ']'
+        },
+        filter: function(q, row) {
+            // var opts = $(this).combobox('options');
+            // console.log(row);
+            // console.log(row['title'].indexOf(q));
+            return (row['title'].toLowerCase().indexOf(q) >= 0) || (row['login'].indexOf(q) >= 0);
+        },
+        tagFormatter: function(value, row) {
+            // console.log(value);
+            if (row != undefined) {
+                if (row.team == '--Отщепенцы--') {
+                    return row.title;
+                } else {
+                    return row.title + ' [' + row.team + ']'
+                }
+            }
+        },
+        // loadFilter: function(data) {
+        //     result = data.filter(function(item) {
+        //         return item.id > 0
+        //     });
+        //     result.push({
+        //         id: 0,
+        //         title: 'Убрать всех'
+        //     })
+
+        //     // i = data.findIndex(function(item) {
+        //     //     return item.id == <%=game.team_id.to_i %>
+        //     // });
+        //     // result[i]["selected"] = true
+        //     return result
+
+        // }
+    });
+}());
+</script>

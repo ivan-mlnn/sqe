@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>tsts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="/treant/Treant.css">
+    <style type="text/css">
+    .node {
+        /*color: #9CB5ED;*/
+        border: 2px solid #C8C8C8;
+        border-radius: 3px;
+    }
+    
+    .node-desc {
+        margin: 0px;
+        padding: 3px;
+    }
+    
+    .node-title {
+        font-size: 20px;
+        line-height: 20px;
+        /*height: 20px;*/
+        font-weight: bold;
+        padding: 3px;
+        margin: 0;
+    }
+    </style>
+    <style type="text/css">
+    * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+    
+    html {
+        -ms-touch-action: none;
+    }
+    
+    body,
+    ul,
+    li {
+        padding: 0;
+        margin: 0;
+        border: 0;
+    }
+    
+    body {
+        font-size: 12px;
+        font-family: ubuntu, helvetica, arial;
+        overflow: hidden;
+        /* this is important to prevent the whole page to bounce */
+    }
+    
+    #zzz {
+        position: absolute;
+        z-index: 1;
+        top: 50px;
+        bottom: 50px;
+        left: 50px;
+        right: 50px;
+        /*background: #ccc;*/
+        overflow: hidden;
+    }
+    
+    #OrganiseChart6 {
+        position: absolute;
+        z-index: 1;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        /*width: 100%;*/
+        -webkit-transform: translateZ(0);
+        -moz-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        -o-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-text-size-adjust: none;
+        -moz-text-size-adjust: none;
+        -ms-text-size-adjust: none;
+        -o-text-size-adjust: none;
+        text-size-adjust: none;
+    }
+    </style>
+</head>
+
+<body>
+    <div style="border: 1px solid black;height: 400px; width: 300px; overflow: hidden;" id="zzz">
+        <div class="chart" id="OrganiseChart6"></div>
+    </div>
+    <script src="/treant/vendor/raphael.js"></script>
+    <script src="/treant/Treant.js"></script>
+    <script src="/treant/vendor/jquery.min.js"></script>
+    <script type="text/javascript" src="/iscroll-zoom.js"></script>
+    <script type="text/javascript">
+    dddd = [{
+        "id": 293,
+        "title": "",
+        "number": 32,
+        "sektor": "0",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 269,
+        "title": "",
+        "number": 8,
+        "sektor": "10",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 270,
+        "title": "",
+        "number": 9,
+        "sektor": "10",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 272,
+        "title": "",
+        "number": 11,
+        "sektor": "13",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 273,
+        "title": "",
+        "number": 12,
+        "sektor": "13",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 271,
+        "title": "",
+        "number": 10,
+        "sektor": "14",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 274,
+        "title": "",
+        "number": 13,
+        "sektor": "14",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 135,
+        "title": "",
+        "number": 7,
+        "sektor": "15",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 275,
+        "title": "",
+        "number": 14,
+        "sektor": "15",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 277,
+        "title": "",
+        "number": 16,
+        "sektor": "18",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 278,
+        "title": "",
+        "number": 17,
+        "sektor": "18",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 280,
+        "title": "",
+        "number": 19,
+        "sektor": "22",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 281,
+        "title": "",
+        "number": 20,
+        "sektor": "22",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 282,
+        "title": "",
+        "number": 21,
+        "sektor": "22",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 279,
+        "title": "",
+        "number": 18,
+        "sektor": "23",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 283,
+        "title": "",
+        "number": 22,
+        "sektor": "23",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 285,
+        "title": "",
+        "number": 24,
+        "sektor": "26",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 286,
+        "title": "",
+        "number": 25,
+        "sektor": "26",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 288,
+        "title": "",
+        "number": 27,
+        "sektor": "29",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 289,
+        "title": "",
+        "number": 28,
+        "sektor": "29",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 129,
+        "title": "",
+        "number": 1,
+        "sektor": "3",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 130,
+        "title": "",
+        "number": 2,
+        "sektor": "3",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 287,
+        "title": "",
+        "number": 26,
+        "sektor": "30",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 290,
+        "title": "",
+        "number": 29,
+        "sektor": "30",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 284,
+        "title": "",
+        "number": 23,
+        "sektor": "31",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 291,
+        "title": "",
+        "number": 30,
+        "sektor": "31",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 276,
+        "title": "",
+        "number": 15,
+        "sektor": "32",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 292,
+        "title": "",
+        "number": 31,
+        "sektor": "32",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 132,
+        "title": "",
+        "number": 4,
+        "sektor": "6",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 133,
+        "title": "",
+        "number": 5,
+        "sektor": "6",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 131,
+        "title": "",
+        "number": 3,
+        "sektor": "7",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }, {
+        "id": 134,
+        "title": "",
+        "number": 6,
+        "sektor": "7",
+        "ko": "х.з.",
+        "bonus": 60,
+        "main": true
+    }]
+
+    function draw_olypic_chart(d) {
+        // body...
+
+        function filterchild(i) {
+            console.log("f:" + this);
+            // console.log(i.sektor == this);
+            if (this == undefined) {
+                return i.sektor == 0
+            } else {
+                return i.sektor == this
+            }
+        }
+
+        function get_childs(item) {
+            var txt = {}
+            if (item.code == undefined) {
+                txt.desc = "Код №" + item.number
+            } else {
+                txt.title = item.code
+            }
+            var node = {
+                    text: txt
+                }
+                // console.log(item);
+            childs = d.filter(filterchild, item.number)
+                // console.log(childs);
+            if (childs.length > 0) {
+                childs = childs.map(get_childs, item.number)
+                node.children = childs
+            }
+            // item.children = childs
+            return node
+        }
+
+        function root() {
+            r = d.find(function(item) {
+                    return item.sektor == 0
+                })
+                // r = get_childs(r, 0, d)
+            return get_childs(r)
+        }
+
+        dt = root()
+        console.log(dt);
+        var tree_structure = {
+            chart: {
+                container: "#OrganiseChart6",
+                levelSeparation: 20,
+                siblingSeparation: 15,
+                subTeeSeparation: 15,
+                rootOrientation: "EAST",
+                // scrollbar: "None",
+                node: {
+                    collapsable: true
+
+                },
+                connectors: {
+                    style: {
+                        "stroke-width": 2,
+                    }
+                }
+
+            },
+            nodeStructure: dt
+        }
+        return new Treant(tree_structure);
+    }
+
+
+    var myScroll;
+
+    function isPassive() {
+        var supportsPassiveOption = false;
+        try {
+            addEventListener("test", null, Object.defineProperty({}, 'passive', {
+                get: function() {
+                    supportsPassiveOption = true;
+                }
+            }));
+        } catch (e) {}
+        return supportsPassiveOption;
+    }
+
+    function loaded() {
+        myScroll = new IScroll('#zzz', {
+            zoom: true,
+            scrollX: true,
+            scrollY: true,
+            zoomMin: 0.5,
+            // zoomStart: 0.5, 
+            freeScroll: true,
+            mouseWheel: true,
+            wheelAction: 'zoom'
+        });
+        // myScroll.scrollTo(-2000, -2000)
+        // myScroll.scrollToElement(document.querySelector('#OrganiseChart6 > div:last-child'))
+        // #OrganiseChart6 > div:nth-child(33)
+        draw_olypic_chart(dddd)
+
+    }
+    document.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, false);
+
+    setTimeout(loaded, 1000);
+    </script>
+</body>
+
+</html>
