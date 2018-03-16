@@ -16,6 +16,7 @@
 
 ## Ruby и gem'ы
 > apt-get install ruby
+
 > gem install sinatra sinatra-contrib thin unicode_utils oj faraday json sequel pg telegram-bot-ruby xxhash
 
 ## Запуск
